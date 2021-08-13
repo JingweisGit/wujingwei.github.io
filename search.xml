@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>基于dockers发布Springboot项目</title>
+    <url>/2021/08/13/%E5%AE%B9%E5%99%A8-%E5%9F%BA%E4%BA%8Edockers%E5%8F%91%E5%B8%83Springboot%E9%A1%B9%E7%9B%AE/</url>
+    <content><![CDATA[<h4 id="基于docker发布springboot项目到远程服务器"><a href="#基于docker发布springboot项目到远程服务器" class="headerlink" title="基于docker发布springboot项目到远程服务器"></a>基于docker发布springboot项目到远程服务器</h4><blockquote>
+<p>环境说明</p>
+<p>服务器：CenOS 7</p>
+<p>IDE：idea</p>
+</blockquote>
+<blockquote>
+<p><strong>PART 1 服务器环境配置</strong></p>
+</blockquote>
+<ul>
+<li><h4 id="1-docker镜像配置"><a href="#1-docker镜像配置" class="headerlink" title="1.  docker镜像配置"></a>1.  docker镜像配置</h4></li>
+</ul>
+<p>​        <strong>1.1. docker镜像源配置</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vi /etc/docker/daemon.json</span><br></pre></td></tr></table></figure>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"># docker镜像源配置</span><br><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;registry-mirrors&quot;</span>: [</span><br><span class="line">        <span class="string">&quot;https://registry.docker-cn.com&quot;</span>,</span><br><span class="line">        <span class="string">&quot;http://hub-mirror.c.163.com&quot;</span>,</span><br><span class="line">        <span class="string">&quot;https://docker.mirrors.ustc.edu.cn&quot;</span>,</span><br><span class="line">        <span class="string">&quot;http://f1361db2.m.daocloud.io&quot;</span></span><br><span class="line">        ],</span><br><span class="line">    <span class="attr">&quot;live-restore&quot;</span>: <span class="literal">true</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>​        <strong>1.2. docker服务修改，使外网可访问</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vi /lib/systemd/system/docker.service</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 将一下行注掉，修改为如下所示</span><br><span class="line">#ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock</span><br><span class="line">ExecStart=/usr/bin/dockerd  -H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">systemctl daemon-reload</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">systemctl restart docker</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p><strong>PART 2 项目操作环境配置</strong></p>
+</blockquote>
+<ul>
+<li><h5 id="1-pom中加入docker构建插件"><a href="#1-pom中加入docker构建插件" class="headerlink" title="1.  pom中加入docker构建插件"></a>1.  pom中加入docker构建插件</h5><p><strong>1.1.</strong> <strong>声明镜像名称前缀</strong></p>
+</li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">properties</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">docker.image.prefix</span>&gt;</span>镜像名称<span class="tag">&lt;/<span class="name">docker.image.prefix</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">properties</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>​            <strong>1.2</strong>. <strong>build-&gt;plugins中加入docker构建plugin</strong></p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="comment">&lt;!--docker镜像构建工具--&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.spotify<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>docker-maven-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.0.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">imageName</span>&gt;</span>$&#123;docker.image.prefix&#125;/$&#123;project.artifactId&#125;<span class="tag">&lt;/<span class="name">imageName</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">dockerDirectory</span>&gt;</span>src/main/target<span class="tag">&lt;/<span class="name">dockerDirectory</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">resources</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;<span class="name">resource</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">targetPath</span>&gt;</span>/<span class="tag">&lt;/<span class="name">targetPath</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">directory</span>&gt;</span>$&#123;project.build.directory&#125;<span class="tag">&lt;/<span class="name">directory</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">include</span>&gt;</span>$&#123;project.build.finalName&#125;.jar<span class="tag">&lt;/<span class="name">include</span>&gt;</span></span><br><span class="line">         <span class="tag">&lt;/<span class="name">resource</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">resources</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+
+<ul>
+<li><strong>2. Dockerfile配置</strong></li>
+</ul>
+<p>步骤一：与src同级目录下，新建Dockerfile<br><img src="https://wx-doc.oss-cn-beijing.aliyuncs.com/0611-dockerfile.jpg" alt="dockerfile"></p>
+<p>步骤二：Dockerfile配置</p>
+<figure class="highlight dockerfile"><table><tr><td class="code"><pre><span class="line"><span class="keyword">FROM</span> openjdk:<span class="number">8</span>-jdk-alpine</span><br><span class="line"><span class="keyword">VOLUME</span><span class="bash"> /tmp</span></span><br><span class="line"><span class="keyword">ADD</span><span class="bash"> target/项目名称.jar /项目名称.jar</span></span><br><span class="line"><span class="keyword">ENTRYPOINT</span><span class="bash"> [<span class="string">&quot;java&quot;</span>,<span class="string">&quot;-Djava.security.egd=file:/dev/./urandom&quot;</span>,<span class="string">&quot;-jar&quot;</span>,<span class="string">&quot;/项目名称.jar&quot;</span>]</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>3. idea添加docker配置</strong><br>步骤一：添加template</li>
+</ul>
+<p><img src="https://wx-doc.oss-cn-beijing.aliyuncs.com/0611-idea-docker-tmp.jpg" alt="idea-docker-template"></p>
+<p>步骤二：添加docker配置</p>
+<p><img src="https://wx-doc.oss-cn-beijing.aliyuncs.com/0611-docker-add.jpg" alt="0611-docker-add"></p>
+<p><em><u>配置介绍</u></em></p>
+<p><img src="https://wx-doc.oss-cn-beijing.aliyuncs.com/0611-docker-add-conf.jpg" alt="0611-docker-add-conf"></p>
+<p> 步骤三：在service栏中添加docker**<Docker Connection>**服务，配置docker环境远程连接</p>
+<p><img src="https://wx-doc.oss-cn-beijing.aliyuncs.com/0611-docker-remote-conn.jpg" alt="0611-docker-remote-conn"></p>
+<p style="color:red;">注：要连接远程环境，需要远程docker支持，详见part1中介绍</p>
+
+<p>至此，IDE中环境配置结束</p>
+<blockquote>
+<p><strong>PART 3 开始构建</strong></p>
+</blockquote>
+<ul>
+<li><p><strong>1. 按照maven常规方式打包项目</strong></p>
+</li>
+<li><p><strong>2. 点击idea按钮开始构建</strong></p>
+</li>
+</ul>
+<p><img src="https://wx-doc.oss-cn-beijing.aliyuncs.com/0611-start-build-btn.jpg" alt="0611-start-build-btn"></p>
+<p><em><u>构建结果</u></em></p>
+<p><img src="https://wx-doc.oss-cn-beijing.aliyuncs.com/0611-docker-build-res.jpg" alt="0611-docker-build-res"></p>
+<ul>
+<li><strong>3. 启动容器</strong></li>
+</ul>
+<p><strong>3.1. 创建容器</strong></p>
+<p><img src="https://wx-doc.oss-cn-beijing.aliyuncs.com/0611-docker-create-cont.jpg" alt="0611-docker-create-cont"></p>
+<ul>
+<li><p><strong>3.2. 容器端口配置</strong></p>
+<p><img src="https://wx-doc.oss-cn-beijing.aliyuncs.com/0611-docker-port-conf.jpg" alt="0611-docker-port-conf"></p>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>容器技术</category>
+      </categories>
+      <tags>
+        <tag>容器技术</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>本站说明</title>
+    <url>/2021/08/13/%E7%AB%99%E7%82%B9%E8%AF%B4%E6%98%8E/</url>
+    <content><![CDATA[<p><strong>用于记录开发过程中遇到的一些技术问题，同时提供一些技术样例</strong></p>
+]]></content>
+      <categories>
+        <category>Web</category>
+      </categories>
+      <tags>
+        <tag>站点说明</tag>
+      </tags>
+  </entry>
+</search>
