@@ -97,4 +97,31 @@
         <tag>站点说明</tag>
       </tags>
   </entry>
+  <entry>
+    <title>基于dockers安装sentry</title>
+    <url>/2021/08/16/%E5%AE%B9%E5%99%A8-%E5%9F%BA%E4%BA%8Edockers%E5%AE%89%E8%A3%85sentry/</url>
+    <content><![CDATA[<h2 id="docker下安装sentry"><a href="#docker下安装sentry" class="headerlink" title="docker下安装sentry"></a>docker下安装sentry</h2><h3 id="1-拉取-sentry镜像"><a href="#1-拉取-sentry镜像" class="headerlink" title="1. 拉取 sentry镜像"></a>1. 拉取 sentry镜像</h3><p>  <code>docker pull sentry</code></p>
+<p>  <code>docker pull postgres</code></p>
+<p>  <code>docker pull redis</code></p>
+<h3 id="2-运行容器"><a href="#2-运行容器" class="headerlink" title="2. 运行容器"></a>2. 运行容器</h3><h4 id="2-1-生成secret-key"><a href="#2-1-生成secret-key" class="headerlink" title="2.1. 生成secret-key"></a>2.1. 生成secret-key</h4><p>  <code>docker run --rm sentry config generate-secret-key</code></p>
+<blockquote>
+<p>将生成的secret-key保留，用在下一步中</p>
+</blockquote>
+<h4 id="2-2-运行容器"><a href="#2-2-运行容器" class="headerlink" title="2.2. 运行容器"></a>2.2. 运行容器</h4><p><code>docker run -d --name sentry-redis redis</code></p>
+<p><code>docker run -d --name sentry-postgres -e POSTGRES_PASSWORD=admin -e POSTGRES_USER=admin postgres</code></p>
+<p><code>docker run -it --rm -e SENTRY_SECRET_KEY=&quot;k&amp;61n_&amp;w++53+f18sgt!u!j+b-l^6m02oo#qq%k--+128o+1cr&quot; --link sentry-postgres:postgres --link sentry-redis:redis sentry upgrade</code></p>
+<blockquote>
+<p>note: -p proxy_port:origin_port 需要将原始端口映射到外部，否则访问不到</p>
+</blockquote>
+<p><code>docker run -d -p 9000:9000 --name my-sentry -e SENTRY_SECRET_KEY=&quot;k&amp;61n_&amp;w++53+f18sgt!u!j+b-l^6m02oo#qq%k--+128o+1cr&quot; --link sentry-redis:redis --link sentry-postgres:postgres sentry</code></p>
+<p><code>docker run -d --name sentry-cron -e SENTRY_SECRET_KEY=&quot;k&amp;61n_&amp;w++53+f18sgt!u!j+b-l^6m02oo#qq%k--+128o+1cr&quot; --link sentry-postgres:postgres --link sentry-redis:redis sentry run cron</code></p>
+<p><code>docker run -d --name sentry-worker-1 -e SENTRY_SECRET_KEY=&quot;k&amp;61n_&amp;w++53+f18sgt!u!j+b-l^6m02oo#qq%k--+128o+1cr&quot; --link sentry-postgres:postgres --link sentry-redis:redis sentry run worker</code></p>
+]]></content>
+      <categories>
+        <category>运维</category>
+      </categories>
+      <tags>
+        <tag>容器技术</tag>
+      </tags>
+  </entry>
 </search>

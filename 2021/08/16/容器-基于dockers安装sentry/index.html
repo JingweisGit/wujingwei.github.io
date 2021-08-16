@@ -6,7 +6,7 @@
     <meta name="referrer" content="origin">
     <meta http-equiv="Cache-Control" content="no-transform">
     <meta http-equiv="Cache-Control" content="no-siteapp">
-    <title>留言板</title>
+    <title>基于dockers安装sentry</title>
     <link rel="shortcut icon" href="#"/>
 
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/LongCang.css">
@@ -18,12 +18,13 @@
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/Rosario.css">
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/UbuntuMono.css">
 
-    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/page.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/post.css">
     
         <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/normal.css">
     
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/jquery-3.4.1.min.js"></script>
+
 <meta name="generator" content="Hexo 5.4.0"></head>
 <body>
     <a id="cover"></a>
@@ -31,10 +32,21 @@
     <div class="header">
         <div class="vertical">
             <div class="inner">
-                <h1 class="header-subtitle">留言板</h1>
+                <h1 class="header-subtitle">基于dockers安装sentry</h1>
                 <div class="header-subinfo">
-                    <p class="article-info-text Chinese"></p>
-                    <p class="article-info-text English"></p>                  
+                    <p class="article-info-text">
+                        <span>
+                            <i class="iconfont icon-time"></i> 发表时间：2021-08-16
+                        </span>
+                        
+                            <span id="/2021/08/16/容器-基于dockers安装sentry/" class="leancloud_visitors" data-flag-title="基于dockers安装sentry">
+                                <i class="iconfont icon-browse"></i> 阅读：<sapn class="leancloud-visitors-count"></span>
+                            </span>
+                        
+                        <span>
+                            <i class="iconfont icon-interactive"></i> 评论：<span class="valine-comment-count" data-xid="/2021/08/16/容器-基于dockers安装sentry/"></span>
+                        </span>  
+                    </p>                 
                 </div>
             </div>
         </div>
@@ -44,13 +56,80 @@
     <div id="container">
     <div id="content">
         <div id="article">
-            <div class="article-body">
+    <div class="toc"></div>
+    <div class="article-body">
+        <h2 id="docker下安装sentry"><a href="#docker下安装sentry" class="headerlink" title="docker下安装sentry"></a>docker下安装sentry</h2><h3 id="1-拉取-sentry镜像"><a href="#1-拉取-sentry镜像" class="headerlink" title="1. 拉取 sentry镜像"></a>1. 拉取 sentry镜像</h3><p>  <code>docker pull sentry</code></p>
+<p>  <code>docker pull postgres</code></p>
+<p>  <code>docker pull redis</code></p>
+<h3 id="2-运行容器"><a href="#2-运行容器" class="headerlink" title="2. 运行容器"></a>2. 运行容器</h3><h4 id="2-1-生成secret-key"><a href="#2-1-生成secret-key" class="headerlink" title="2.1. 生成secret-key"></a>2.1. 生成secret-key</h4><p>  <code>docker run --rm sentry config generate-secret-key</code></p>
+<blockquote>
+<p>将生成的secret-key保留，用在下一步中</p>
+</blockquote>
+<h4 id="2-2-运行容器"><a href="#2-2-运行容器" class="headerlink" title="2.2. 运行容器"></a>2.2. 运行容器</h4><p><code>docker run -d --name sentry-redis redis</code></p>
+<p><code>docker run -d --name sentry-postgres -e POSTGRES_PASSWORD=admin -e POSTGRES_USER=admin postgres</code></p>
+<p><code>docker run -it --rm -e SENTRY_SECRET_KEY=&quot;k&amp;61n_&amp;w++53+f18sgt!u!j+b-l^6m02oo#qq%k--+128o+1cr&quot; --link sentry-postgres:postgres --link sentry-redis:redis sentry upgrade</code></p>
+<blockquote>
+<p>note: -p proxy_port:origin_port 需要将原始端口映射到外部，否则访问不到</p>
+</blockquote>
+<p><code>docker run -d -p 9000:9000 --name my-sentry -e SENTRY_SECRET_KEY=&quot;k&amp;61n_&amp;w++53+f18sgt!u!j+b-l^6m02oo#qq%k--+128o+1cr&quot; --link sentry-redis:redis --link sentry-postgres:postgres sentry</code></p>
+<p><code>docker run -d --name sentry-cron -e SENTRY_SECRET_KEY=&quot;k&amp;61n_&amp;w++53+f18sgt!u!j+b-l^6m02oo#qq%k--+128o+1cr&quot; --link sentry-postgres:postgres --link sentry-redis:redis sentry run cron</code></p>
+<p><code>docker run -d --name sentry-worker-1 -e SENTRY_SECRET_KEY=&quot;k&amp;61n_&amp;w++53+f18sgt!u!j+b-l^6m02oo#qq%k--+128o+1cr&quot; --link sentry-postgres:postgres --link sentry-redis:redis sentry run worker</code></p>
+
+        <p class="suffix-end">__END__</p>
+        <div class="suffix-box">
+            <div class="suffix-box-left">
+                <img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/%E5%A4%B4%E5%83%8F.jpg" alt="Jingwei Blog">
+            </div>
+            <div class="suffix-box-right">
+                <span class="suffix-box-title">文章作者</span>：Jingwei Blog
+                <br>
+                <span class="suffix-box-title">文章出处</span>：<a href="/2021/08/16/%E5%AE%B9%E5%99%A8-%E5%9F%BA%E4%BA%8Edockers%E5%AE%89%E8%A3%85sentry/" target="_blank">基于dockers安装sentry</a>
+                <br>
+                <span class="suffix-box-title">作者签名</span>：简单地活着, 肆意又精彩.
+                <br>
+                <span class="suffix-box-title">关于主题</span>：<a href="https://github.com/first19326/Hexo-LiveForCode" target="_blank">Hexo - Live For Code</a>
+                <br>
+                <span class="suffix-box-title">版权声明</span>：文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" title="BY-NC-SA" target="_blank">BY-NC-SA</a> 许可协议，转载请注明出处
+                <br>
+            </div>
+            <div style="clear: both;"></div>
+        </div>
+    </div>
+    <div class="article-footer">
+        
+            <div class="category">
+                分类：
+                
+                    <a href="/categorie/%E8%BF%90%E7%BB%B4/">运维</a>
                 
             </div>
-            <div class="article-comments">
-                <div class="comments-content"></div>
+        
+        
+            <div class="tag">
+                标签：
+                
+                    <a href="/tag/%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/">容器技术</a>
+                
             </div>
+        
+        <div class="article-prev-next">
+            
+            
+                <a href="/2021/08/13/%E5%AE%B9%E5%99%A8-%E5%9F%BA%E4%BA%8Edocker%E5%8F%91%E5%B8%83Springboot%E9%A1%B9%E7%9B%AE/" class="next-prefix">» </a> 下一篇：    <a href="/2021/08/13/%E5%AE%B9%E5%99%A8-%E5%9F%BA%E4%BA%8Edocker%E5%8F%91%E5%B8%83Springboot%E9%A1%B9%E7%9B%AE/" title="发布于 2021-08-13 05:03">基于docker发布Springboot项目</a>
+            
         </div>
+    </div>
+    
+    <div class="article-comments">
+        <div class="comments-title">
+            评论列表
+        </div>
+        <div class="comments-content">
+        </div>
+    </div>
+
+</div>
+
     </div>
 </div>
     <div id="footer"></div>
