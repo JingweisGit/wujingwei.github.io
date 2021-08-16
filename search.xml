@@ -1,30 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>一次因过滤器未正常使用ByteArrayInputStream导致的请求异常</title>
-    <url>/2021/08/16/%E4%B8%80%E6%AC%A1%E5%9B%A0%E8%BF%87%E6%BB%A4%E5%99%A8%E6%9C%AA%E6%AD%A3%E5%B8%B8%E4%BD%BF%E7%94%A8ByteArrayInputStream%E5%AF%BC%E8%87%B4%E7%9A%84%E8%AF%B7%E6%B1%82%E5%BC%82%E5%B8%B8/</url>
-    <content><![CDATA[<h3 id="一次因过滤器未正常使用ByteArrayInputStream导致的请求异常"><a href="#一次因过滤器未正常使用ByteArrayInputStream导致的请求异常" class="headerlink" title="一次因过滤器未正常使用ByteArrayInputStream导致的请求异常"></a>一次因过滤器未正常使用ByteArrayInputStream导致的请求异常</h3><p>表状为：开发环境一切正常，测试环境中，当只有一个中文字符的时候就会报如下异常：</p>
-<p><code>Invalid UTF-8 middle byte 0x3f\n at [Source: (PushbackInputStream); line: 20, column: 11]</code></p>
-<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> ServletInputStream <span class="title">getInputStream</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> ByteArrayInputStream byteArrayInputStream = <span class="keyword">new</span> ByteArrayInputStream(body.getBytes(<span class="string">&quot;UTF-8&quot;</span>));</span><br><span class="line">    ServletInputStream servletInputStream = <span class="keyword">new</span> ServletInputStream() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isFinished</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isReady</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setReadListener</span><span class="params">(ReadListener readListener)</span> </span>&#123;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">read</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> byteArrayInputStream.read();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="keyword">return</span> servletInputStream;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>由于框架中使用了上述过滤器，但是为给定UTF-8字符集，导致开发环境不报错，测试环境报了上述错误。</p>
-<ul>
-<li>上述问题导致的另一个问题<blockquote>
-<p>中文返回乱码</p>
-</blockquote>
-</li>
-</ul>
-<p>解决方式：</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">spring.http.encoding.force=true</span><br><span class="line">spring.http.encoding.charset=UTF-8</span><br><span class="line">spring.http.encoding.enabled=true</span><br><span class="line">server.tomcat.uri-encoding=UTF-8</span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>web应用</category>
-      </categories>
-      <tags>
-        <tag>异常处理</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>中断异常的正确处理方式</title>
     <url>/2021/08/16/%E4%B8%AD%E6%96%AD%E5%BC%82%E5%B8%B8%E7%9A%84%E6%AD%A3%E7%A1%AE%E5%A4%84%E7%90%86%E6%96%B9%E5%BC%8F/</url>
     <content><![CDATA[<h2 id="InterruptedException"><a href="#InterruptedException" class="headerlink" title="InterruptedException"></a>InterruptedException</h2><blockquote>
@@ -75,15 +51,6 @@
       <tags>
         <tag>异常处理</tag>
       </tags>
-  </entry>
-  <entry>
-    <title>本站说明</title>
-    <url>/2021/08/13/%E7%AB%99%E7%82%B9%E8%AF%B4%E6%98%8E/</url>
-    <content><![CDATA[<p><strong>用于记录开发过程中遇到的一些技术问题，同时提供一些技术样例</strong></p>
-]]></content>
-      <categories>
-        <category>本站说明</category>
-      </categories>
   </entry>
   <entry>
     <title>基于docker发布Springboot项目</title>
@@ -171,6 +138,30 @@
       </tags>
   </entry>
   <entry>
+    <title>一次因过滤器未正常使用ByteArrayInputStream导致的请求异常</title>
+    <url>/2021/08/16/%E4%B8%80%E6%AC%A1%E5%9B%A0%E8%BF%87%E6%BB%A4%E5%99%A8%E6%9C%AA%E6%AD%A3%E5%B8%B8%E4%BD%BF%E7%94%A8ByteArrayInputStream%E5%AF%BC%E8%87%B4%E7%9A%84%E8%AF%B7%E6%B1%82%E5%BC%82%E5%B8%B8/</url>
+    <content><![CDATA[<h3 id="一次因过滤器未正常使用ByteArrayInputStream导致的请求异常"><a href="#一次因过滤器未正常使用ByteArrayInputStream导致的请求异常" class="headerlink" title="一次因过滤器未正常使用ByteArrayInputStream导致的请求异常"></a>一次因过滤器未正常使用ByteArrayInputStream导致的请求异常</h3><p>表状为：开发环境一切正常，测试环境中，当只有一个中文字符的时候就会报如下异常：</p>
+<p><code>Invalid UTF-8 middle byte 0x3f\n at [Source: (PushbackInputStream); line: 20, column: 11]</code></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> ServletInputStream <span class="title">getInputStream</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> ByteArrayInputStream byteArrayInputStream = <span class="keyword">new</span> ByteArrayInputStream(body.getBytes(<span class="string">&quot;UTF-8&quot;</span>));</span><br><span class="line">    ServletInputStream servletInputStream = <span class="keyword">new</span> ServletInputStream() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isFinished</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isReady</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setReadListener</span><span class="params">(ReadListener readListener)</span> </span>&#123;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">read</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> byteArrayInputStream.read();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="keyword">return</span> servletInputStream;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于框架中使用了上述过滤器，但是为给定UTF-8字符集，导致开发环境不报错，测试环境报了上述错误。</p>
+<ul>
+<li>上述问题导致的另一个问题<blockquote>
+<p>中文返回乱码</p>
+</blockquote>
+</li>
+</ul>
+<p>解决方式：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">spring.http.encoding.force=true</span><br><span class="line">spring.http.encoding.charset=UTF-8</span><br><span class="line">spring.http.encoding.enabled=true</span><br><span class="line">server.tomcat.uri-encoding=UTF-8</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>web应用</category>
+      </categories>
+      <tags>
+        <tag>异常处理</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>基于dockers安装sentry</title>
     <url>/2021/08/16/%E5%AE%B9%E5%99%A8-%E5%9F%BA%E4%BA%8Edockers%E5%AE%89%E8%A3%85sentry/</url>
     <content><![CDATA[<h2 id="docker下安装sentry"><a href="#docker下安装sentry" class="headerlink" title="docker下安装sentry"></a>docker下安装sentry</h2><h3 id="1-拉取-sentry镜像"><a href="#1-拉取-sentry镜像" class="headerlink" title="1. 拉取 sentry镜像"></a>1. 拉取 sentry镜像</h3><p>  <code>docker pull sentry</code></p>
@@ -196,5 +187,14 @@
       <tags>
         <tag>容器技术</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>本站说明</title>
+    <url>/2021/08/13/%E7%AB%99%E7%82%B9%E8%AF%B4%E6%98%8E/</url>
+    <content><![CDATA[<p><strong>用于记录开发过程中遇到的一些技术问题，同时提供一些技术样例</strong></p>
+]]></content>
+      <categories>
+        <category>本站说明</category>
+      </categories>
   </entry>
 </search>
