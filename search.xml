@@ -18,7 +18,7 @@
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">spring.http.encoding.force=true</span><br><span class="line">spring.http.encoding.charset=UTF-8</span><br><span class="line">spring.http.encoding.enabled=true</span><br><span class="line">server.tomcat.uri-encoding=UTF-8</span><br></pre></td></tr></table></figure>
 ]]></content>
       <categories>
-        <category>web</category>
+        <category>web应用</category>
       </categories>
       <tags>
         <tag>异常处理</tag>
