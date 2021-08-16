@@ -6,7 +6,7 @@
     <meta name="referrer" content="origin">
     <meta http-equiv="Cache-Control" content="no-transform">
     <meta http-equiv="Cache-Control" content="no-siteapp">
-    <title>标签 - 站点说明</title>
+    <title>中断异常的正确处理方式</title>
     <link rel="shortcut icon" href="#"/>
 
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/LongCang.css">
@@ -18,66 +18,144 @@
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/Rosario.css">
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/UbuntuMono.css">
 
-    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/index.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/post.css">
+    
+        <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/normal.css">
+    
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/jquery-3.4.1.min.js"></script>
+
 <meta name="generator" content="Hexo 5.4.0"></head>
 <body>
     <a id="cover"></a>
     <div id="header">
-    <div class="header" >
+    <div class="header">
         <div class="vertical">
             <div class="inner">
-                <h1 class="header-title"></h1>
-                <h2 class="header-description" id="hitokoto"></h2>
-                <h3 class="header-info" id="hitokotoAuthor"></h3>
-                <!--
-                <h1 class="header-subtitle"></h1>
-                <p class="header-subinfo"></p>
-                -->
+                <h1 class="header-subtitle">中断异常的正确处理方式</h1>
+                <div class="header-subinfo">
+                    <p class="article-info-text">
+                        <span>
+                            <i class="iconfont icon-time"></i> 发表时间：2021-08-16
+                        </span>
+                        
+                            <span id="/2021/08/16/中断异常的正确处理方式/" class="leancloud_visitors" data-flag-title="中断异常的正确处理方式">
+                                <i class="iconfont icon-browse"></i> 阅读：<sapn class="leancloud-visitors-count"></span>
+                            </span>
+                        
+                        <span>
+                            <i class="iconfont icon-interactive"></i> 评论：<span class="valine-comment-count" data-xid="/2021/08/16/中断异常的正确处理方式/"></span>
+                        </span>  
+                    </p>                 
+                </div>
             </div>
         </div>
-        <a class="scroll-down" href="javascript:;" target="_self" data-offset="-45">
-            <span class="hidden">Scroll Down</span>
-            <i class="scroll-down-icon iconfont icon-return"></i>
-        </a>
+        <canvas id="articleHeaderCanvas"></canvas>
     </div>
 </div>
     <div id="container">
     <div id="content">
-        <div class="articles">
-    
-        <div class="article">
-            <div class="article-title">
-                <a href="/2021/08/13/%E7%AB%99%E7%82%B9%E8%AF%B4%E6%98%8E/">本站说明</a>
-                
-                    <span class="article-sticky">置顶</span>
-                
+        <div id="article">
+    <div class="toc"></div>
+    <div class="article-body">
+        <h2 id="InterruptedException"><a href="#InterruptedException" class="headerlink" title="InterruptedException"></a>InterruptedException</h2><blockquote>
+<p>线程状态</p>
+</blockquote>
+<ul>
+<li><p>新建 -&gt; 就绪 -&gt; 运行 -&gt; 阻塞 -&gt; 死亡</p>
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/%E7%BA%BF%E7%A8%8B%E7%8A%B6%E6%80%81.jpg" alt="线程中断"></p>
+<h4 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h4></li>
+<li><p>1、线程中断介绍</p>
+<p>​    Java中的中断实际上并不是真正的中断了一个线程，而是维护了一个中断的标识。</p>
+<p>​    每一个线程都有一个boolean类型的标志，此标志意思是当前的请求是否请求中断，默认为false。当一个线程A调用了线程B的interrupt方法时，那么线程B的是否请求的中断标志变为true。而线程B可以调用方法检测到此标志的变化。</p>
+<p>2、中断异常介绍</p>
+<p>​    中断异常只是为了标识某个行为被中断，实际上并不中断当前线程。</p>
+<ul>
+<li>源码中关于中断的解释（翻译不一定完全到位，理解即可）</li>
+</ul>
+<p>Thrown when a thread is waiting, sleeping, or otherwise occupied, and the thread is interrupted, either before or during the activity. Occasionally a method may wish to test whether the current thread has been interrupted, and if so, to immediately throw this exception.</p>
+<p>当线程正在等待、休眠或以其他方式被占用时抛出，线程在活动状态之前或者活动期间被中断。有时候，一个方法也许希望检测当前线程是否被中断，因此，要立即抛出此异常。</p>
+</li>
+</ul>
+<h4 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h4><ul>
+<li>不正确示例<blockquote>
+<p>示例</p>
+</blockquote>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">   res = lock.tryLock(<span class="number">100</span>, <span class="number">10</span>, TimeUnit.SECONDS);</span><br><span class="line">&#125; <span class="keyword">catch</span> (InterruptedException ex)&#123;</span><br><span class="line">   log.error(ex.getMessage());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上述方式只是记录了日志，没有对中断进行处理，对于上一级调用程序，当前线程的中断状态无法被感知。</p>
+<h4 id="正确的处理方式"><a href="#正确的处理方式" class="headerlink" title="正确的处理方式"></a>正确的处理方式</h4><ul>
+<li>重新抛出异常</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">   res = lock.tryLock(<span class="number">100</span>, <span class="number">10</span>, TimeUnit.SECONDS);</span><br><span class="line">&#125; <span class="keyword">catch</span> (InterruptedException ex)&#123;</span><br><span class="line">   log.error(ex.getMessage());</span><br><span class="line">   <span class="keyword">throw</span> ex;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>通过线程<code> Thread.currentThread().interrupt();</code>方法将状态重新置为true</li>
+</ul>
+<blockquote>
+<p>示例</p>
+</blockquote>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 维护一个可用标识，通过标识来判断是否重置中断状态</span></span><br><span class="line"><span class="keyword">boolean</span> interrupted = <span class="keyword">false</span>;</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    res = lock.tryLock(<span class="number">100</span>, <span class="number">10</span>, TimeUnit.SECONDS);</span><br><span class="line">&#125;<span class="keyword">catch</span> (InterruptedException ex)&#123;</span><br><span class="line">    log.error(ex.getMessage());</span><br><span class="line">    interrupted = <span class="keyword">true</span>;</span><br><span class="line">&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>(interrupted) &#123;</span><br><span class="line">        Thread.currentThread().interrupt();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+        <p class="suffix-end">__END__</p>
+        <div class="suffix-box">
+            <div class="suffix-box-left">
+                <img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/%E5%A4%B4%E5%83%8F.jpg" alt="Jingwei Blog">
             </div>
-            <div class="article-abstract">
-                
-                    摘要：本站说明.
-                    <a href="/2021/08/13/%E7%AB%99%E7%82%B9%E8%AF%B4%E6%98%8E/">阅读全文</a>
-                
+            <div class="suffix-box-right">
+                <span class="suffix-box-title">文章作者</span>：Jingwei Blog
+                <br>
+                <span class="suffix-box-title">文章出处</span>：<a href="/2021/08/16/%E4%B8%AD%E6%96%AD%E5%BC%82%E5%B8%B8%E7%9A%84%E6%AD%A3%E7%A1%AE%E5%A4%84%E7%90%86%E6%96%B9%E5%BC%8F/" target="_blank">中断异常的正确处理方式</a>
+                <br>
+                <span class="suffix-box-title">作者签名</span>：简单地活着, 肆意又精彩.
+                <br>
+                <span class="suffix-box-title">关于主题</span>：<a href="https://github.com/first19326/Hexo-LiveForCode" target="_blank">Hexo - Live For Code</a>
+                <br>
+                <span class="suffix-box-title">版权声明</span>：文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" title="BY-NC-SA" target="_blank">BY-NC-SA</a> 许可协议，转载请注明出处
+                <br>
             </div>
-            <div class="clear"></div>
-            <div class="article-info">
-                <span>
-                    <i class="iconfont icon-time"></i> 发表时间：2021-08-13
-                </span>
-                
-                    <span id="/2021/08/13/站点说明/" class="leancloud_visitors" data-flag-title="本站说明">
-                        <i class="iconfont icon-browse"></i> 阅读：<sapn class="leancloud-visitors-count"></span>
-                    </span>
-                
-                <span>
-                    <i class="iconfont icon-interactive"></i> 评论：<span class="valine-comment-count" data-xid="/2021/08/13/站点说明/"></span>
-                </span>
-            </div>
-            <div class="clear"></div>     
+            <div style="clear: both;"></div>
         </div>
+    </div>
+    <div class="article-footer">
+        
+            <div class="category">
+                分类：
+                
+                    <a href="/categorie/JAVA%E5%9F%BA%E7%A1%80/">JAVA基础</a>
+                
+            </div>
+        
+        
+            <div class="tag">
+                标签：
+                
+                    <a href="/tag/%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/">异常处理</a>
+                
+            </div>
+        
+        <div class="article-prev-next">
+            
+                <a href="/2021/08/16/%E4%B8%80%E6%AC%A1%E5%9B%A0%E8%BF%87%E6%BB%A4%E5%99%A8%E6%9C%AA%E6%AD%A3%E5%B8%B8%E4%BD%BF%E7%94%A8ByteArrayInputStream%E5%AF%BC%E8%87%B4%E7%9A%84%E8%AF%B7%E6%B1%82%E5%BC%82%E5%B8%B8/" class="prev-prefix">« </a> 上一篇：    <a href="/2021/08/16/%E4%B8%80%E6%AC%A1%E5%9B%A0%E8%BF%87%E6%BB%A4%E5%99%A8%E6%9C%AA%E6%AD%A3%E5%B8%B8%E4%BD%BF%E7%94%A8ByteArrayInputStream%E5%AF%BC%E8%87%B4%E7%9A%84%E8%AF%B7%E6%B1%82%E5%BC%82%E5%B8%B8/" title="发布于 2021-08-16 01:05">一次因过滤器未正常使用ByteArrayInputStream导致的请求异常</a>
+                <br>
+            
+            
+                <a href="/2021/08/16/%E5%AE%B9%E5%99%A8-%E5%9F%BA%E4%BA%8Edockers%E5%AE%89%E8%A3%85sentry/" class="next-prefix">» </a> 下一篇：    <a href="/2021/08/16/%E5%AE%B9%E5%99%A8-%E5%9F%BA%E4%BA%8Edockers%E5%AE%89%E8%A3%85sentry/" title="发布于 2021-08-16 12:30">基于dockers安装sentry</a>
+            
+        </div>
+    </div>
     
-    
+    <div class="article-comments">
+        <div class="comments-title">
+            评论列表
+        </div>
+        <div class="comments-content">
+        </div>
+    </div>
+
 </div>
 
     </div>

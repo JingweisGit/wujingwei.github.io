@@ -91,11 +91,8 @@
     <content><![CDATA[<p><strong>用于记录开发过程中遇到的一些技术问题，同时提供一些技术样例</strong></p>
 ]]></content>
       <categories>
-        <category>Web</category>
+        <category>本站说明</category>
       </categories>
-      <tags>
-        <tag>站点说明</tag>
-      </tags>
   </entry>
   <entry>
     <title>基于dockers安装sentry</title>
@@ -122,6 +119,82 @@
       </categories>
       <tags>
         <tag>容器技术</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>中断异常的正确处理方式</title>
+    <url>/2021/08/16/%E4%B8%AD%E6%96%AD%E5%BC%82%E5%B8%B8%E7%9A%84%E6%AD%A3%E7%A1%AE%E5%A4%84%E7%90%86%E6%96%B9%E5%BC%8F/</url>
+    <content><![CDATA[<h2 id="InterruptedException"><a href="#InterruptedException" class="headerlink" title="InterruptedException"></a>InterruptedException</h2><blockquote>
+<p>线程状态</p>
+</blockquote>
+<ul>
+<li><p>新建 -&gt; 就绪 -&gt; 运行 -&gt; 阻塞 -&gt; 死亡</p>
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/%E7%BA%BF%E7%A8%8B%E7%8A%B6%E6%80%81.jpg" alt="线程中断"></p>
+<h4 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h4></li>
+<li><p>1、线程中断介绍</p>
+<p>​    Java中的中断实际上并不是真正的中断了一个线程，而是维护了一个中断的标识。</p>
+<p>​    每一个线程都有一个boolean类型的标志，此标志意思是当前的请求是否请求中断，默认为false。当一个线程A调用了线程B的interrupt方法时，那么线程B的是否请求的中断标志变为true。而线程B可以调用方法检测到此标志的变化。</p>
+<p>2、中断异常介绍</p>
+<p>​    中断异常只是为了标识某个行为被中断，实际上并不中断当前线程。</p>
+<ul>
+<li>源码中关于中断的解释（翻译不一定完全到位，理解即可）</li>
+</ul>
+<p>Thrown when a thread is waiting, sleeping, or otherwise occupied, and the thread is interrupted, either before or during the activity. Occasionally a method may wish to test whether the current thread has been interrupted, and if so, to immediately throw this exception.</p>
+<p>当线程正在等待、休眠或以其他方式被占用时抛出，线程在活动状态之前或者活动期间被中断。有时候，一个方法也许希望检测当前线程是否被中断，因此，要立即抛出此异常。</p>
+</li>
+</ul>
+<h4 id="示例"><a href="#示例" class="headerlink" title="示例"></a>示例</h4><ul>
+<li>不正确示例<blockquote>
+<p>示例</p>
+</blockquote>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">   res = lock.tryLock(<span class="number">100</span>, <span class="number">10</span>, TimeUnit.SECONDS);</span><br><span class="line">&#125; <span class="keyword">catch</span> (InterruptedException ex)&#123;</span><br><span class="line">   log.error(ex.getMessage());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上述方式只是记录了日志，没有对中断进行处理，对于上一级调用程序，当前线程的中断状态无法被感知。</p>
+<h4 id="正确的处理方式"><a href="#正确的处理方式" class="headerlink" title="正确的处理方式"></a>正确的处理方式</h4><ul>
+<li>重新抛出异常</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">   res = lock.tryLock(<span class="number">100</span>, <span class="number">10</span>, TimeUnit.SECONDS);</span><br><span class="line">&#125; <span class="keyword">catch</span> (InterruptedException ex)&#123;</span><br><span class="line">   log.error(ex.getMessage());</span><br><span class="line">   <span class="keyword">throw</span> ex;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>通过线程<code> Thread.currentThread().interrupt();</code>方法将状态重新置为true</li>
+</ul>
+<blockquote>
+<p>示例</p>
+</blockquote>
+  <figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 维护一个可用标识，通过标识来判断是否重置中断状态</span></span><br><span class="line"><span class="keyword">boolean</span> interrupted = <span class="keyword">false</span>;</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    res = lock.tryLock(<span class="number">100</span>, <span class="number">10</span>, TimeUnit.SECONDS);</span><br><span class="line">&#125;<span class="keyword">catch</span> (InterruptedException ex)&#123;</span><br><span class="line">    log.error(ex.getMessage());</span><br><span class="line">    interrupted = <span class="keyword">true</span>;</span><br><span class="line">&#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">    <span class="keyword">if</span>(interrupted) &#123;</span><br><span class="line">        Thread.currentThread().interrupt();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>JAVA基础</category>
+      </categories>
+      <tags>
+        <tag>异常处理</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>一次因过滤器未正常使用ByteArrayInputStream导致的请求异常</title>
+    <url>/2021/08/16/%E4%B8%80%E6%AC%A1%E5%9B%A0%E8%BF%87%E6%BB%A4%E5%99%A8%E6%9C%AA%E6%AD%A3%E5%B8%B8%E4%BD%BF%E7%94%A8ByteArrayInputStream%E5%AF%BC%E8%87%B4%E7%9A%84%E8%AF%B7%E6%B1%82%E5%BC%82%E5%B8%B8/</url>
+    <content><![CDATA[<h3 id="一次因过滤器未正常使用ByteArrayInputStream导致的请求异常"><a href="#一次因过滤器未正常使用ByteArrayInputStream导致的请求异常" class="headerlink" title="一次因过滤器未正常使用ByteArrayInputStream导致的请求异常"></a>一次因过滤器未正常使用ByteArrayInputStream导致的请求异常</h3><p>表状为：开发环境一切正常，测试环境中，当只有一个中文字符的时候就会报如下异常：</p>
+<p><code>Invalid UTF-8 middle byte 0x3f\n at [Source: (PushbackInputStream); line: 20, column: 11]</code></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> ServletInputStream <span class="title">getInputStream</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> ByteArrayInputStream byteArrayInputStream = <span class="keyword">new</span> ByteArrayInputStream(body.getBytes(<span class="string">&quot;UTF-8&quot;</span>));</span><br><span class="line">    ServletInputStream servletInputStream = <span class="keyword">new</span> ServletInputStream() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isFinished</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isReady</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setReadListener</span><span class="params">(ReadListener readListener)</span> </span>&#123;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">read</span><span class="params">()</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> byteArrayInputStream.read();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">    <span class="keyword">return</span> servletInputStream;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>由于框架中使用了上述过滤器，但是为给定UTF-8字符集，导致开发环境不报错，测试环境报了上述错误。</p>
+<ul>
+<li>上述问题导致的另一个问题<blockquote>
+<p>中文返回乱码</p>
+</blockquote>
+</li>
+</ul>
+<p>解决方式：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">spring.http.encoding.force=true</span><br><span class="line">spring.http.encoding.charset=UTF-8</span><br><span class="line">spring.http.encoding.enabled=true</span><br><span class="line">server.tomcat.uri-encoding=UTF-8</span><br></pre></td></tr></table></figure>
+]]></content>
+      <categories>
+        <category>WEB</category>
+      </categories>
+      <tags>
+        <tag>异常处理</tag>
       </tags>
   </entry>
 </search>
