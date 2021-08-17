@@ -197,4 +197,15 @@
         <category>本站说明</category>
       </categories>
   </entry>
+  <entry>
+    <title>docker安装elasticsearch及相关组件</title>
+    <url>/2021/08/17/docker%E5%AE%89%E8%A3%85elasticsearch%E5%8F%8A%E7%9B%B8%E5%85%B3%E7%BB%84%E4%BB%B6/</url>
+    <content><![CDATA[]]></content>
+      <categories>
+        <category>运维</category>
+      </categories>
+      <tags>
+        <tag>容器技术</tag>
+      </tags>
+  </entry>
 </search>
