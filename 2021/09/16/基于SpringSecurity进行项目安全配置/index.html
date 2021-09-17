@@ -6,7 +6,7 @@
     <meta name="referrer" content="origin">
     <meta http-equiv="Cache-Control" content="no-transform">
     <meta http-equiv="Cache-Control" content="no-siteapp">
-    <title>基于SpringSecurit进行项目安全配置</title>
+    <title>基于SpringSecurity进行项目安全配置</title>
     <link rel="shortcut icon" href="#"/>
 
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/LongCang.css">
@@ -32,19 +32,19 @@
     <div class="header">
         <div class="vertical">
             <div class="inner">
-                <h1 class="header-subtitle">基于SpringSecurit进行项目安全配置</h1>
+                <h1 class="header-subtitle">基于SpringSecurity进行项目安全配置</h1>
                 <div class="header-subinfo">
                     <p class="article-info-text">
                         <span>
                             <i class="iconfont icon-time"></i> 发表时间：2021-09-16
                         </span>
                         
-                            <span id="/2021/09/16/基于SpringSecurit进行项目安全配置/" class="leancloud_visitors" data-flag-title="基于SpringSecurit进行项目安全配置">
+                            <span id="/2021/09/16/基于SpringSecurity进行项目安全配置/" class="leancloud_visitors" data-flag-title="基于SpringSecurity进行项目安全配置">
                                 <i class="iconfont icon-browse"></i> 阅读：<sapn class="leancloud-visitors-count"></span>
                             </span>
                         
                         <span>
-                            <i class="iconfont icon-interactive"></i> 评论：<span class="valine-comment-count" data-xid="/2021/09/16/基于SpringSecurit进行项目安全配置/"></span>
+                            <i class="iconfont icon-interactive"></i> 评论：<span class="valine-comment-count" data-xid="/2021/09/16/基于SpringSecurity进行项目安全配置/"></span>
                         </span>  
                     </p>                 
                 </div>
@@ -69,10 +69,10 @@
 
 <h5 id="1-2-swagger依赖引入"><a href="#1-2-swagger依赖引入" class="headerlink" title="1.2. swagger依赖引入"></a>1.2. swagger依赖引入</h5><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>io.springfox<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>springfox-swagger-ui<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.9.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>io.springfox<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>springfox-swagger2<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.9.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
 
-<h4 id="2、文件配置安全属性"><a href="#2、文件配置安全属性" class="headerlink" title="2、文件配置安全属性"></a>2、文件配置安全属性</h4><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">spring.security.user.name</span>=<span class="string">admin</span></span><br><span class="line"><span class="meta">spring.security.user.password</span>=<span class="string">admin</span></span><br></pre></td></tr></table></figure>
+<h4 id="2、文件配置安全属性"><a href="#2、文件配置安全属性" class="headerlink" title="2、文件配置安全属性"></a>2、文件配置安全属性</h4><figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">spring.security.user.name</span>=<span class="string">username</span></span><br><span class="line"><span class="meta">spring.security.user.password</span>=<span class="string">password</span></span><br></pre></td></tr></table></figure>
 
 <p><strong>注: 低版本中的配置为</strong></p>
-<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">security.user.name</span>=<span class="string">admin</span></span><br><span class="line"><span class="meta">security.user.password</span>=<span class="string">admin</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">security.user.name</span>=<span class="string">username</span></span><br><span class="line"><span class="meta">security.user.password</span>=<span class="string">password</span></span><br></pre></td></tr></table></figure>
 
 <h4 id="3、放行规则配置"><a href="#3、放行规则配置" class="headerlink" title="3、放行规则配置"></a>3、放行规则配置</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> org.springframework.context.annotation.Configuration;</span><br><span class="line"><span class="keyword">import</span> org.springframework.security.config.annotation.web.builders.HttpSecurity;</span><br><span class="line"><span class="keyword">import</span> org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;</span><br><span class="line"><span class="keyword">import</span> org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@EnableWebSecurity</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SecurityConfig</span> <span class="keyword">extends</span> <span class="title">WebSecurityConfigurerAdapter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">configure</span><span class="params">(HttpSecurity http)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">        <span class="comment">// 设置URL的授权问题</span></span><br><span class="line">        <span class="comment">// 多个条件取交集</span></span><br><span class="line">        http.authorizeRequests()</span><br><span class="line">                <span class="comment">// 匹配 / 控制器  permitAll() 不需要被认证就可以访问</span></span><br><span class="line">                .antMatchers(<span class="string">&quot;/&quot;</span>).permitAll()</span><br><span class="line">                .antMatchers(<span class="string">&quot;/swagger-resources/**&quot;</span>).authenticated()</span><br><span class="line">                .antMatchers(<span class="string">&quot;/webjars/**&quot;</span>).authenticated()</span><br><span class="line">                .antMatchers(<span class="string">&quot;/v2/**&quot;</span>).authenticated()</span><br><span class="line">                .antMatchers(<span class="string">&quot;/swagger-ui.html/**&quot;</span>).authenticated()</span><br><span class="line">                .and().formLogin();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 关闭csrf</span></span><br><span class="line">        http.csrf().disable();</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
         <p class="suffix-end">__END__</p>
@@ -83,7 +83,7 @@
             <div class="suffix-box-right" style="margin-top: 19px;">
                 <span class="suffix-box-title">文章作者</span>：Jingwei Blog
                 <br>
-                <span class="suffix-box-title">文章出处</span>：<a href="/2021/09/16/%E5%9F%BA%E4%BA%8ESpringSecurit%E8%BF%9B%E8%A1%8C%E9%A1%B9%E7%9B%AE%E5%AE%89%E5%85%A8%E9%85%8D%E7%BD%AE/" target="_blank">基于SpringSecurit进行项目安全配置</a>
+                <span class="suffix-box-title">文章出处</span>：<a href="/2021/09/16/%E5%9F%BA%E4%BA%8ESpringSecurity%E8%BF%9B%E8%A1%8C%E9%A1%B9%E7%9B%AE%E5%AE%89%E5%85%A8%E9%85%8D%E7%BD%AE/" target="_blank">基于SpringSecurity进行项目安全配置</a>
                 <br>
                 <span class="suffix-box-title">作者签名</span>：生活，即无数个平凡和偶尔的惊喜，惊喜来时，如星坠银河，激起朵朵涟漪.
                 <br>
