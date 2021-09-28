@@ -6,7 +6,7 @@
     <meta name="referrer" content="origin">
     <meta http-equiv="Cache-Control" content="no-transform">
     <meta http-equiv="Cache-Control" content="no-siteapp">
-    <title>标签</title>
+    <title>MySQL索引回表</title>
     <link rel="shortcut icon" href="#"/>
 
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/LongCang.css">
@@ -18,12 +18,13 @@
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/Rosario.css">
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/UbuntuMono.css">
 
-    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/page.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/post.css">
     
         <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/normal.css">
     
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/jquery-3.4.1.min.js"></script>
+
 <meta name="generator" content="Hexo 5.4.0"></head>
 <body>
     <a id="cover"></a>
@@ -31,10 +32,21 @@
     <div class="header">
         <div class="vertical">
             <div class="inner">
-                <h1 class="header-subtitle">标签</h1>
+                <h1 class="header-subtitle">MySQL索引回表</h1>
                 <div class="header-subinfo">
-                    <p class="article-info-text Chinese"></p>
-                    <p class="article-info-text English"></p>                  
+                    <p class="article-info-text">
+                        <span>
+                            <i class="iconfont icon-time"></i> 发表时间：2021-09-28
+                        </span>
+                        
+                            <span id="/2021/09/28/MySQL索引回表/" class="leancloud_visitors" data-flag-title="MySQL索引回表">
+                                <i class="iconfont icon-browse"></i> 阅读：<sapn class="leancloud-visitors-count"></span>
+                            </span>
+                        
+                        <span>
+                            <i class="iconfont icon-interactive"></i> 评论：<span class="valine-comment-count" data-xid="/2021/09/28/MySQL索引回表/"></span>
+                        </span>  
+                    </p>                 
                 </div>
             </div>
         </div>
@@ -43,13 +55,76 @@
 </div>
     <div id="container">
     <div id="content">
-        <div class="tags">
-    <div class="tags-title">
-        目前共计 7 个标签
+        <div id="article">
+    <div class="toc"></div>
+    <div class="article-body">
+        <h3 id="1-聚簇索引概念"><a href="#1-聚簇索引概念" class="headerlink" title="1. 聚簇索引概念"></a>1. 聚簇索引概念</h3><p>《高性能MySQL》一书中对聚簇索引的解释是：聚簇索引并不是一种单独的索引类型，而是一种数据存储方式。</p>
+<p>其结构如下图：</p>
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/%E8%81%9A%E7%B0%87%E7%B4%A2%E5%BC%95.jfif"></p>
+<p>具体理解为：叶子页包含了行的全部数据，叶子节点包含了索引列，即这是一种用来存储索引列和行数据的数据结构或者说存储方式。</p>
+<h3 id="2-回表概念"><a href="#2-回表概念" class="headerlink" title="2. 回表概念"></a>2. 回表概念</h3><p>在理解概念之前，我们先看一下MySQL聚簇索引的设定：</p>
+<p>​        1）MySQL一张表中必有一个聚簇索引，且只能由一个，这个索引的叶子节点存储了行记录。</p>
+<p>​        2）表中有主键，那么这个主键就是聚簇索引。</p>
+<p>​        3）如果表中未定义主键，第一个非空唯一索引列就是聚簇索引。</p>
+<p>​        4）如果表中无主键且未定义任何索引，MySQL会隐式的创建一个主键，并将该主键设置为聚簇索引。</p>
+<p>接下来，看一下回表的理解：</p>
+<p>​        情景一：假设MySQL表中字段设定索引，且查询过程中走了聚簇索引，那么此时查询就会直接通过聚簇索引找出对应的行记录。</p>
+<p>​        情景二：假设MySQL表中字段设定索引，但是查询过程中未走聚簇索引，那么此时查询过程中，首先需要通过非聚簇索引找到对应的聚簇索引，然后才能通过聚簇索引找到对应的行记录。</p>
+<p>​        通过情景二可以看到，即使走普通索引，也还是需要再回到聚簇索引查询一次表数据，这个过程称为*<u>回表</u>*。</p>
+
+        <p class="suffix-end">__END__</p>
+        <div class="suffix-box">
+            <div class="suffix-box-left">
+                <img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/%E5%A4%B4%E5%83%8F.jpg" alt="Jingwei Blog">
+            </div>
+            <div class="suffix-box-right" style="margin-top: 19px;">
+                <span class="suffix-box-title">文章作者</span>：Jingwei Blog
+                <br>
+                <span class="suffix-box-title">文章出处</span>：<a href="/2021/09/28/MySQL%E7%B4%A2%E5%BC%95%E5%9B%9E%E8%A1%A8/" target="_blank">MySQL索引回表</a>
+                <br>
+                <span class="suffix-box-title">作者签名</span>：生活，即无数个平凡和偶尔的惊喜，惊喜来时，如星坠银河，激起朵朵涟漪.
+                <br>
+                <!-- <span class="suffix-box-title">关于主题</span>：<a href="https://github.com/first19326/Hexo-LiveForCode" target="_blank">Hexo - Live For Code</a>
+                <br>
+                <span class="suffix-box-title">版权声明</span>：文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" title="BY-NC-SA" target="_blank">BY-NC-SA</a> 许可协议，转载请注明出处 -->
+                <br>
+            </div>
+            <div style="clear: both;"></div>
+        </div>
     </div>
-    <div class="tags-content">
-        <a href="/tag/Camunda/" style="font-size: 18.5px; color: #6f6f6f">Camunda</a> <a href="/tag/Security/" style="font-size: 12px; color: #ccc">Security</a> <a href="/tag/%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/" style="font-size: 25px; color: #111">容器技术</a> <a href="/tag/%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/" style="font-size: 18.5px; color: #6f6f6f">异常处理</a> <a href="/tag/%E6%8B%A6%E6%88%AA%E5%99%A8/" style="font-size: 12px; color: #ccc">拦截器</a> <a href="/tag/%E7%AD%BE%E5%90%8D/" style="font-size: 12px; color: #ccc">签名</a> <a href="/tag/%E7%B4%A2%E5%BC%95/" style="font-size: 12px; color: #ccc">索引</a>
+    <div class="article-footer">
+        
+            <div class="category">
+                分类：
+                
+                    <a href="/categorie/MySQL/">MySQL</a>
+                
+            </div>
+        
+        
+            <div class="tag">
+                标签：
+                
+                    <a href="/tag/%E7%B4%A2%E5%BC%95/">索引</a>
+                
+            </div>
+        
+        <div class="article-prev-next">
+            
+            
+                <a href="/2021/09/24/Springboot-Spring%E6%95%B4%E5%90%88Camunda%E5%B7%A5%E4%BD%9C%E6%B5%81%E5%BC%95%E6%93%8E-%E4%BA%8C/" class="next-prefix">» </a> 下一篇：    <a href="/2021/09/24/Springboot-Spring%E6%95%B4%E5%90%88Camunda%E5%B7%A5%E4%BD%9C%E6%B5%81%E5%BC%95%E6%93%8E-%E4%BA%8C/" title="发布于 2021-09-24 06:19">Springboot/Spring整合Camunda工作流引擎(二)</a>
+            
+        </div>
     </div>
+    
+    <div class="article-comments">
+        <div class="comments-title">
+            评论列表
+        </div>
+        <div class="comments-content">
+        </div>
+    </div>
+
 </div>
 
     </div>
