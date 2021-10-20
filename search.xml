@@ -492,4 +492,373 @@
         <tag>索引</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Linux安装Oracle 11G</title>
+    <url>/2021/10/20/Linux%E5%AE%89%E8%A3%85Oracle%2011G/</url>
+    <content><![CDATA[<h4 id="1-下载安装包"><a href="#1-下载安装包" class="headerlink" title="1. 下载安装包"></a>1. 下载安装包</h4><p><a href="https://www.oracle.com/cn/database/enterprise-edition/downloads/oracle-db11g-linux.html">https://www.oracle.com/cn/database/enterprise-edition/downloads/oracle-db11g-linux.html</a></p>
+<h4 id="2-解压"><a href="#2-解压" class="headerlink" title="2. 解压"></a>2. 解压</h4><ul>
+<li><p>将两个压缩包解压到同一个文件夹下</p>
+</li>
+<li><p>解压命令：</p>
+</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">unzip -d 目标文件夹 当前文件</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-准备工作"><a href="#3-准备工作" class="headerlink" title="3. 准备工作"></a>3. 准备工作</h4><h5 id="3-1-关闭SELINUX"><a href="#3-1-关闭SELINUX" class="headerlink" title="3.1. 关闭SELINUX"></a>3.1. 关闭SELINUX</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查看selinux状态</span></span><br><span class="line">getenforce</span><br><span class="line"><span class="meta">#</span><span class="bash"> 设置为关闭状态</span></span><br><span class="line">setenforce 0</span><br><span class="line"><span class="meta">#</span><span class="bash"> 如需永久关闭，vi /etc/selinux/config</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 然后将SELINUX=enforcing改为SELINUX=disabled</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="3-2-关闭防火墙"><a href="#3-2-关闭防火墙" class="headerlink" title="3.2. 关闭防火墙"></a>3.2. 关闭防火墙</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查看状态</span></span><br><span class="line">systemctl status firewalld.service</span><br><span class="line"><span class="meta">#</span><span class="bash"> 关闭防火墙</span></span><br><span class="line">systemctl stop firewalld.service</span><br></pre></td></tr></table></figure>
+
+<h5 id="3-3-安装Oracle依赖"><a href="#3-3-安装Oracle依赖" class="headerlink" title="3.3. 安装Oracle依赖"></a>3.3. 安装Oracle依赖</h5><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">yum install gcc make binutils gcc-c++ compat-libstdc++-33elfutils-libelf-devel elfutils-libelf-devel-static ksh libaio libaio-develnumactl-devel sysstat unixODBC unixODBC-devel pcre-devel –y</span><br></pre></td></tr></table></figure>
+
+<h5 id="3-4-添加安装用户和用户组"><a href="#3-4-添加安装用户和用户组" class="headerlink" title="3.4. 添加安装用户和用户组"></a>3.4. 添加安装用户和用户组</h5><p>依次执行以下命令</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;</span><span class="bash"> groupadd oinstall</span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> groupadd dba</span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> useradd -g oinstall -G dba oracle</span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> passwd oracle</span></span><br></pre></td></tr></table></figure>
+
+<p>输入密码时可能会弹出提示，无需理会，二次确认密码即可</p>
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oralce-insatll-1.png"></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查看设置</span></span><br><span class="line">id oracle</span><br></pre></td></tr></table></figure>
+<h5 id="3-4-修改内核参数配置文件"><a href="#3-4-修改内核参数配置文件" class="headerlink" title="3.4. 修改内核参数配置文件"></a>3.4. 修改内核参数配置文件</h5><ul>
+<li>编辑sysctl.conf</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vim /etc/sysctl.conf</span><br></pre></td></tr></table></figure>
+<p>在末尾添加以下内容</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">fs.aio-max-nr = 1048576</span><br><span class="line">fs.file-max = 6815744</span><br><span class="line">kernel.shmall = 2097152</span><br><span class="line">kernel.shmmax = 1073741824</span><br><span class="line">kernel.shmmni = 4096</span><br><span class="line">kernel.sem = 250 32000 100 128</span><br><span class="line">net.ipv4.ip_local_port_range = 9000 65500</span><br><span class="line">net.core.rmem_default = 262144</span><br><span class="line">net.core.rmem_max = 4194304</span><br><span class="line">net.core.wmem_default = 262144</span><br><span class="line">net.core.wmem_max = 1048576</span><br></pre></td></tr></table></figure>
+<ul>
+<li>查看是否成功写进/etc/sysctl.conf文件中</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> kernel.shmmax = 1073741824为本机物理内存（2G）的一半，单位为byte</span></span><br><span class="line">sysctl -p</span><br></pre></td></tr></table></figure>
+<h5 id="3-4-修改内核参数配置文件-1"><a href="#3-4-修改内核参数配置文件-1" class="headerlink" title="3.4. 修改内核参数配置文件"></a>3.4. 修改内核参数配置文件</h5><ul>
+<li>修改/etc/security/limits.conf文件</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vim /etc/security/limits.conf</span><br></pre></td></tr></table></figure>
+<p>​    在末尾添加以下内容</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">oracle           soft    nproc           2047</span><br><span class="line">oracle           hard    nproc           16384</span><br><span class="line">oracle           soft    nofile          1024</span><br><span class="line">oracle           hard    nofile         65536</span><br><span class="line">oracle           soft    stack           10240 </span><br></pre></td></tr></table></figure>
+<ul>
+<li>修改/etc/pam.d/login文件</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vim /etc/pam.d/login</span><br></pre></td></tr></table></figure>
+<p>在末尾添加以下内容</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">session required  /lib64/security/pam_limits.so</span><br><span class="line">session required   pam_limits.so </span><br></pre></td></tr></table></figure>
+<ul>
+<li>修改/etc/profile文件</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vim /etc/profile</span><br></pre></td></tr></table></figure>
+<p>在末尾添加以下内容</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">oracle配置</span></span><br><span class="line">if [ $USER = &quot;oracle&quot; ]; then</span><br><span class="line">  if [ $SHELL = &quot;/bin/ksh&quot; ]; then</span><br><span class="line">      ulimit -p 16384</span><br><span class="line">      ulimit -n 65536</span><br><span class="line">  else</span><br><span class="line">      ulimit -u 16384 -n 65536</span><br><span class="line">  fi</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
+<p>source一下</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">source /etc/profile</span><br></pre></td></tr></table></figure>
+
+<h5 id="3-5-创建安装目录和设置文件权限"><a href="#3-5-创建安装目录和设置文件权限" class="headerlink" title="3.5. 创建安装目录和设置文件权限"></a>3.5. 创建安装目录和设置文件权限</h5><p>依次输入以下命令</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 文件夹名称需和后面一致(重点)</span></span><br><span class="line">mkdir -p /data/oracle/product/11.2.0</span><br><span class="line">mkdir /data/oracle/oradata</span><br><span class="line">mkdir /data/oracle/inventory</span><br><span class="line">mkdir /data/oracle/fast_recovery_area</span><br><span class="line">chown -R oracle:oinstall /data/oracle</span><br><span class="line">chmod -R 775 /data/oracle</span><br></pre></td></tr></table></figure>
+<h5 id="3-6-设置oracle用户环境变量"><a href="#3-6-设置oracle用户环境变量" class="headerlink" title="3.6. 设置oracle用户环境变量"></a>3.6. 设置oracle用户环境变量</h5><ul>
+<li>首先切换到oracle用户下</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 切换下去在home目录下</span></span><br><span class="line">su -l oracle</span><br></pre></td></tr></table></figure>
+<ul>
+<li>修改profile文件</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vim .bash_profile</span><br></pre></td></tr></table></figure>
+
+<p>  在末尾添加如下内容</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">ORACLE_BASE=/data/oracle</span><br><span class="line"><span class="meta">#</span><span class="bash"> 文件夹地址与前面data地址一致11.2.0</span></span><br><span class="line">ORACLE_HOME=$ORACLE_BASE/product/11.2.0</span><br><span class="line">ORACLE_SID=orcl</span><br><span class="line">PATH=$PATH:$ORACLE_HOME/bin</span><br><span class="line">export ORACLE_BASE ORACLE_HOME ORACLE_SID PATH</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>编辑完source一下</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">source .bash_profile</span><br></pre></td></tr></table></figure>
+<h5 id="3-7-编辑静默安装响应文件"><a href="#3-7-编辑静默安装响应文件" class="headerlink" title="3.7. 编辑静默安装响应文件"></a>3.7. 编辑静默安装响应文件</h5><ul>
+<li>将解压后的response文件夹复制到当前目录（/home/oracle实际为准）</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">cp -R response-path(实际路径为准) .</span><br></pre></td></tr></table></figure>
+<ul>
+<li>进入当前response目录，编辑配置项</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cd response</span><br><span class="line"></span><br><span class="line">vim db_install.rsp</span><br></pre></td></tr></table></figure>
+
+<p>末尾粘贴如下脚本</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">oracle.install.option=INSTALL_DB_SWONLY</span><br><span class="line">ORACLE_HOSTNAME=CentOS</span><br><span class="line">UNIX_GROUP_NAME=oinstall</span><br><span class="line">INVENTORY_LOCATION=/data/oracle/inventory</span><br><span class="line">SELECTED_LANGUAGES=en,zh_CN</span><br><span class="line"><span class="meta">#</span><span class="bash"> 文件夹地址与前面data地址一致11.2.0</span></span><br><span class="line">ORACLE_HOME=/data/oracle/product/11.2.0</span><br><span class="line">ORACLE_BASE=/data/oracle</span><br><span class="line">oracle.install.db.InstallEdition=EE</span><br><span class="line">oracle.install.db.DBA_GROUP=dba</span><br><span class="line">oracle.install.db.OPER_GROUP=dba</span><br><span class="line">DECLINE_SECURITY_UPDATES=true</span><br></pre></td></tr></table></figure>
+<h4 id="4-安装"><a href="#4-安装" class="headerlink" title="4. 安装"></a>4. 安装</h4><h5 id="4-1-安装"><a href="#4-1-安装" class="headerlink" title="4.1 安装"></a>4.1 安装</h5><ul>
+<li>cd进入解压后的database目录下（不切换，仍为oracle用户）</li>
+<li>执行安装命令</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">./runInstaller -silent -responseFile /home/oracle/response/db_install.rsp -ignorePrereq</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oralce-insatll-2.jpg"></p>
+<ul>
+<li>安装完后执行exit命令退出oracle用户，进入root用户，依次执行命令</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sh /data/oracle/inventory/orainstRoot.sh</span><br></pre></td></tr></table></figure>
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oralce-insatll-3.jpg"></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sh /data/oracle/product/11.2.0/root.sh</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oralce-insatll-4.jpg"></p>
+<h5 id="4-2-监听配置"><a href="#4-2-监听配置" class="headerlink" title="4.2 监听配置"></a>4.2 监听配置</h5><ul>
+<li>重新进入oracle用户</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">su -l oracle</span><br></pre></td></tr></table></figure>
+<ul>
+<li>执行以下命令</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">netca /silent /responseFile /home/oracle/response/netca.rsp</span><br></pre></td></tr></table></figure>
+<ul>
+<li>查看是否监听</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">netstat -tnulp|grep 1521</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oralce-insatll-6.jpg"></p>
+<h5 id="4-3-创建实例"><a href="#4-3-创建实例" class="headerlink" title="4.3 创建实例"></a>4.3 创建实例</h5><ul>
+<li>修改配置文件</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">vim /home/oracle/response/dbca.rsp</span><br></pre></td></tr></table></figure>
+<p>修改以下相关数据</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">[GENERAL]</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> oracle版本，不能更改</span></span><br><span class="line">RESPONSEFILE_VERSION = &quot;11.2.0&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Type of operation</span></span><br><span class="line">OPERATION_TYPE = &quot;createDatabase&quot;</span><br><span class="line"></span><br><span class="line">[CREATEDATABASE]</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Global database name of the database</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 全局数据库的名字=SID+主机域名<span class="comment"># 第三方工具链接数据库的时候使用的service名称</span></span></span><br><span class="line">GDBNAME = &quot;orcl.test&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : System identifier (SID) of the database</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 对应的实例名字</span></span><br><span class="line">SID = &quot;orcl&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Name of the template</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 建库用的模板文件</span></span><br><span class="line">TEMPLATENAME = &quot;General_Purpose.dbc&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Password <span class="keyword">for</span> SYS user</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> SYS管理员密码</span></span><br><span class="line">SYSPASSWORD = &quot;123456&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Password <span class="keyword">for</span> SYSTEM user</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> SYSTEM管理员密码</span></span><br><span class="line">SYSTEMPASSWORD = &quot;123456&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Password <span class="keyword">for</span> SYSMAN user</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> SYSMAN管理员密码</span></span><br><span class="line">SYSMANPASSWORD = &quot;123456&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Password <span class="keyword">for</span> DBSNMP user</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> DBSNMP管理员密码</span></span><br><span class="line">DBSNMPPASSWORD = &quot;123456&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Location of the data file<span class="string">&#x27;s</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="string"> 数据文件存放目录</span></span></span><br><span class="line">DATAFILEDESTINATION =/data/oracle/oradata</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="string"> Description   : Location of the data file&#x27;</span>s</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 恢复数据存放目录</span></span><br><span class="line">RECOVERYAREADESTINATION=/data/oracle/fast_recovery_area</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Character <span class="built_in">set</span> of the database</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 字符集，重要!!! 建库后一般不能更改，所以建库前要确定清楚。</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> (CHARACTERSET = <span class="string">&quot;AL32UTF8&quot;</span> NATIONALCHARACTERSET= <span class="string">&quot;UTF8&quot;</span>)</span></span><br><span class="line">CHARACTERSET = &quot;UTF8&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : total memory <span class="keyword">in</span> MB to allocate to Oracle</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> oracle内存1638MB,物理内存2G*80%</span></span><br><span class="line">TOTALMEMORY = &quot;1638&quot;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>进行静默配置</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dbca -silent -responseFile /home/oracle/response/dbca.rsp</span><br></pre></td></tr></table></figure>
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oralce-insatll-7.jpg"></p>
+<ul>
+<li>实例检查</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">ps -ef | grep ora_ | grep -v grep</span><br></pre></td></tr></table></figure>
+<ul>
+<li>监听状态查看</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">lsnrctl status</span><br></pre></td></tr></table></figure>
+<ul>
+<li>状态查看</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sqlplus / as sysdba</span><br><span class="line"><span class="meta">#</span><span class="bash"> SQl 查看</span></span><br><span class="line">select status from v$instance</span><br></pre></td></tr></table></figure>
+
+<h5 id="4-4-创建用户"><a href="#4-4-创建用户" class="headerlink" title="4.4 创建用户"></a>4.4 创建用户</h5><figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 创建用户</span></span><br><span class="line"><span class="keyword">CREATE</span>  <span class="keyword">USER</span> admin IDENTIFIED <span class="keyword">BY</span> admin123;</span><br><span class="line"><span class="comment">-- 授予新登陆的用户创建权限</span></span><br><span class="line"><span class="keyword">grant</span> <span class="keyword">create</span> session <span class="keyword">to</span> admin;</span><br><span class="line"><span class="comment">-- 授予dba权限</span></span><br><span class="line"><span class="keyword">grant</span> dba <span class="keyword">to</span> admin;</span><br><span class="line"><span class="comment">-- 连接测试</span></span><br><span class="line"><span class="keyword">connect</span> admin<span class="operator">/</span>admin123;</span><br></pre></td></tr></table></figure>]]></content>
+      <categories>
+        <category>Oracle</category>
+      </categories>
+      <tags>
+        <tag>数据库安装</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Oracle DG主从同步配置</title>
+    <url>/2021/10/20/Oracle%20DG%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E9%85%8D%E7%BD%AE/</url>
+    <content><![CDATA[<p>本部分主要介绍主从同步</p>
+<p>环境信息</p>
+<blockquote>
+<p>系统：CentOS 7<br>Oracle版本：Oracle 11g R2(11.0.2.1.0)</p>
+<p>场景：主从，主库读写，从库读</p>
+<p>文档说明：文档中的配置，有些是主/备都要配置的，需要注意</p>
+</blockquote>
+<p>官方参考文档：<a href="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/Oracle%20DG%E5%AE%98%E6%96%B9%E6%96%87%E6%A1%A3.pdf">Oracle DG官方文档.pdf</a></p>
+<h3 id="1-配置准备"><a href="#1-配置准备" class="headerlink" title="1.  配置准备"></a>1.  配置准备</h3><h4 id="1-修改实例唯一标识-db-unique-name"><a href="#1-修改实例唯一标识-db-unique-name" class="headerlink" title="1) 修改实例唯一标识 db_unique_name"></a>1) 修改实例唯一标识 db_unique_name</h4><p>该标识是区分实例的依据，后面会用到（很重要）</p>
+<ul>
+<li>进入SQL命令行</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sqlplus / as sysdba</span><br></pre></td></tr></table></figure>
+<ul>
+<li>先查看一下</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">parameter</span> db_unique_name</span><br></pre></td></tr></table></figure>
+<ul>
+<li>开始修改</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 示例 alter system set db_unique_name=&#x27;orcl_dg02[实例名称，自定义]&#x27; scope=spfile;</span></span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">system</span> <span class="keyword">set</span> db_unique_name<span class="operator">=</span><span class="string">&#x27;orcl_dg01&#x27;</span> <span class="keyword">scope</span><span class="operator">=</span>spfile;</span><br><span class="line"></span><br><span class="line">shutdown immediate;</span><br><span class="line"></span><br><span class="line">startup;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>修改完成后确认一下，看是否修改过来</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 方式一：</span></span><br><span class="line"><span class="keyword">show</span> <span class="keyword">parameter</span> db_unique_name</span><br><span class="line"><span class="comment">-- 方式二：退出到shell命令行</span></span><br><span class="line">lsnrctl status</span><br></pre></td></tr></table></figure>
+<h4 id="2-归档状态检测"><a href="#2-归档状态检测" class="headerlink" title="2) 归档状态检测"></a>2) 归档状态检测</h4><ul>
+<li>检查</li>
+</ul>
+<p>配置DG必须使数主库处于归档状态，具体检测方法为：</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sqlplus / as sysdba</span><br></pre></td></tr></table></figure>
+<p>查看归档状态</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SQL</span><span class="operator">&gt;</span> archive log list</span><br></pre></td></tr></table></figure>
+
+<p>正常情况为：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">Database log mode              Archive Mode</span><br><span class="line">Automatic archival             Enabled</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>非开启状态为：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line">Database log mode              Archive Mode</span><br><span class="line">Automatic archival             Enabled</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+<ul>
+<li>开启</li>
+</ul>
+<p>如果未开启，应先开启归档，操作方法为：</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 1.关闭数据库</span></span><br><span class="line">shutdown immediate</span><br><span class="line"><span class="comment">-- 2.启动mount模式</span></span><br><span class="line">startup mount</span><br><span class="line"><span class="comment">-- 3.开启归档模式（关闭为alter database noarchivelog;）</span></span><br><span class="line"><span class="keyword">alter</span> database archivelog;</span><br><span class="line"></span><br><span class="line"><span class="keyword">alter</span> database <span class="keyword">open</span>;</span><br><span class="line"><span class="comment">-- 4. 检查是否开启</span></span><br><span class="line">archive log list;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>日志状态检查</li>
+</ul>
+<p>说明：主库日志必须强制开启状态</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">alter</span> database force logging;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="3-配置网络通信与监听"><a href="#3-配置网络通信与监听" class="headerlink" title="3) 配置网络通信与监听"></a>3) 配置网络通信与监听</h4><p>——————重点来了——————</p>
+<blockquote>
+<p>说明：</p>
+<p>$ORACLE_HOME：Oracle data目录全局变量，oracle的数据/恢复文件/配置等都放在这个路径底下</p>
+</blockquote>
+<ul>
+<li>配置oracle密码文件</li>
+</ul>
+<p><u>可能存在，如存在不需要再生成</u>，这个文件很重要，主备要保持一致，常见做法是将主库的复制到备用库对应位置，复制前最好先备份</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 1.进入目录</span></span><br><span class="line">cd $ORACLE_HOME/dbs/</span><br><span class="line"><span class="meta">#</span><span class="bash"> 2. orapworcl为密码配置文件名称，命名规则为[orapw+实例名称]，可通过sql查询</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> select instance_name from v<span class="variable">$instance</span></span></span><br><span class="line">orapwd file=$ORACLE_HOME/dbs/orapworcl password=syspassword entries=30;</span><br><span class="line"><span class="meta">#</span><span class="bash"> 复制到备库对应目录</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 语法 scp 文件名 ip:路径</span></span><br><span class="line">scp orapworcl ip:/data/oracle/product/11.2.0/dbs/</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>配置监听 istener.ora （主/备都要配置）</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 1. 进入编辑模式</span></span><br><span class="line">vim $ORACLE_HOME/network/admin/listener.ora</span><br><span class="line"><span class="meta">#</span><span class="bash"> 2. 开始编辑</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> SID_LIST_LISTENER是必须添加的</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> GLOBAL_DBNAME可通过SQL查询：select * from global_name;</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> ORACLE_HOME可以通过cat命令查看当前HOME位置：cat <span class="variable">$ORACLE_HOME</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> SID_NAME可通过SQL查询：select instance_name from  V<span class="variable">$instance</span>;</span></span><br><span class="line">SID_LIST_LISTENER =</span><br><span class="line">  (SID_LIST =</span><br><span class="line">    (SID_DESC =</span><br><span class="line">      (GLOBAL_DBNAME = ORCL.TEST)</span><br><span class="line">      (SID_NAME = orcl)</span><br><span class="line">      (ORACLE_HOME = /data/oracle/product/11.2.0)</span><br><span class="line">    )</span><br><span class="line">  )</span><br><span class="line"></span><br><span class="line">LISTENER =</span><br><span class="line">  (DESCRIPTION_LIST =</span><br><span class="line">    (DESCRIPTION =</span><br><span class="line">      (ADDRESS = (PROTOCOL = IPC)(KEY = EXTPROC1521))</span><br><span class="line">      (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))</span><br><span class="line">    )</span><br><span class="line">  )</span><br><span class="line"></span><br><span class="line">ADR_BASE_LISTENER = /data/oracle</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>配置网络监听tnsnames.ora （主/备都要配置）</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 1.进入编辑模式</span></span><br><span class="line">vim $ORACLE_HOME/network/admin/tnsnames.ora</span><br><span class="line"><span class="meta">#</span><span class="bash"> 2.开始编辑</span></span><br><span class="line">ORCL = # 相当于网络名称，后面tnsping的时候直接ping这个名称</span><br><span class="line">  (DESCRIPTION =</span><br><span class="line">    (ADDRESS = (PROTOCOL = TCP)(HOST = 192.168.75.132 )(PORT = 1521)) # 当前库IP</span><br><span class="line">    (CONNECT_DATA =</span><br><span class="line">      (SERVER = DEDICATED)</span><br><span class="line">      (SERVICE_NAME = orcl_1.test) # 可通过SQL查询：show parameter service_names;</span><br><span class="line">      (UR=A) # 这里必须加上</span><br><span class="line">    )</span><br><span class="line">  )</span><br><span class="line"><span class="meta">#</span><span class="bash"> 下同，不在赘述</span></span><br><span class="line">ORCL1 =</span><br><span class="line">  (DESCRIPTION =</span><br><span class="line">   (ADDRESS_LIST =</span><br><span class="line">    (ADDRESS = (PROTOCOL = TCP)(HOST = 192.168.75.133)(PORT = 1521))</span><br><span class="line">   )</span><br><span class="line">    (CONNECT_DATA =</span><br><span class="line">      (SERVICE_NAME = orcl_2.test)</span><br><span class="line">      (SERVER = DEDICATED)</span><br><span class="line">      (UR=A)</span><br><span class="line">    )</span><br><span class="line">  )</span><br><span class="line"><span class="meta"> #</span><span class="bash"> 3. 重启监听</span></span><br><span class="line">lsnrctl reload</span><br><span class="line"><span class="meta">#</span><span class="bash"> 重启后查看是否成功</span></span><br><span class="line">lsnrctl status</span><br><span class="line"><span class="meta">#</span><span class="bash"> 4 验证网络监听</span></span><br><span class="line">tnsping orcl1 # orcl1即上面配置的名称 ORCL1</span><br><span class="line">tnsping orcl</span><br></pre></td></tr></table></figure>
+
+<h4 id="4）主库配置Profile文件-（主-备都要配置）"><a href="#4）主库配置Profile文件-（主-备都要配置）" class="headerlink" title="4）主库配置Profile文件 （主/备都要配置）"></a>4）主库配置Profile文件 （主/备都要配置）</h4><p>这里先简介以下pfile和spile， pfile是oracle静态的初始化文件，spfile是oracle二进制形式动态的初始化文件。Oracle在启动时会先加载spfile，如果spfile加载失败,才会去加载pfile。<br>    所以，为了让配置生效，我们会先创建pfile，在pfile里编辑好以后，再通过把pfile拷贝到spfile，具体分以下两步：</p>
+<p>​    1）编辑pfile<br>​    2）编辑spfile</p>
+<p>​    进入sql 命令行创建profile</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 进入SQL shell</span></span><br><span class="line">sqlplus / as sysdba</span><br><span class="line"><span class="meta">#</span><span class="bash"> 创建profile文件</span></span><br><span class="line">create pfile from spfile;</span><br><span class="line"><span class="meta">#</span><span class="bash"> 退出到shell</span></span><br><span class="line">quit;</span><br></pre></td></tr></table></figure>
+<ul>
+<li> 编辑主库配置文件</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> initorcl.ora为自己的配置文件，命名以自己的为准，规则为[init+实例名称]</span></span><br><span class="line">vi $ORACLE_HOME/dbs/initorcl.ora</span><br></pre></td></tr></table></figure>
+
+<p>开始编辑，以下为示例（示例中的注释在实际操作时不可以有），<u><em>配置文件需要仔细核对，否则会导致日志文件无法同步</em></u></p>
+<blockquote>
+<p>说明：备库配置文件模仿主库配置文件修改即可，正常情况只需要把实例标识做颠倒，如有其他不同，需要仔细核对</p>
+</blockquote>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">orcl.__db_cache_size=780140544</span><br><span class="line">orcl.__java_pool_size=4194304</span><br><span class="line">orcl.__large_pool_size=4194304</span><br><span class="line">orcl.__oracle_base=&#x27;/data/oracle&#x27;#ORACLE_BASE set from environment</span><br><span class="line">orcl.__pga_aggregate_target=645922816</span><br><span class="line">orcl.__sga_target=1073741824</span><br><span class="line">orcl.__shared_io_pool_size=0</span><br><span class="line">orcl.__shared_pool_size=272629760</span><br><span class="line">orcl.__streams_pool_size=0</span><br><span class="line">*.audit_file_dest=&#x27;/data/oracle/admin/orcl/adump&#x27;</span><br><span class="line">*.audit_trail=&#x27;db&#x27;</span><br><span class="line">*.compatible=&#x27;11.2.0.0.0&#x27;</span><br><span class="line">*.control_files=&#x27;/data/oracle/oradata/orcl/control01.ctl&#x27;,&#x27;/data/oracle/flash_recovery_area/orcl/control02.ctl&#x27;</span><br><span class="line">*.db_block_size=8192</span><br><span class="line">*.db_name=&#x27;orcl&#x27;</span><br><span class="line">*.db_recovery_file_dest=&#x27;/data/oracle/flash_recovery_area&#x27;</span><br><span class="line">*.db_recovery_file_dest_size=4070572032</span><br><span class="line">*.db_unique_name=&#x27;orcl_1&#x27; # 当前实例的唯一标识，必须有</span><br><span class="line">*.diagnostic_dest=&#x27;/data/oracle&#x27;</span><br><span class="line">*.dispatchers=&#x27;(PROTOCOL=TCP) (SERVICE=orclXDB)&#x27;</span><br><span class="line">*.open_cursors=300</span><br><span class="line">*.pga_aggregate_target=643825664</span><br><span class="line">*.processes=150</span><br><span class="line">*.remote_login_passwordfile=&#x27;EXCLUSIVE&#x27;</span><br><span class="line">*.sga_target=1073741824</span><br><span class="line">*.undo_tablespace=&#x27;UNDOTBS1&#x27;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">-------------------------</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 以下为新增配置</span></span><br><span class="line"><span class="meta">#</span><span class="bash">-------------------------</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> cover文件位置，这里，参数1：主库，参数2：备库；可以有多个</span></span><br><span class="line">*.db_file_name_convert=&#x27;/data/oracle/oradata/&#x27;,&#x27;/data/oracle/oradata/&#x27;</span><br><span class="line"><span class="meta">#</span><span class="bash"> 主备切换时备库的标识，即当前库变为备库</span></span><br><span class="line">*.fal_client=&#x27;orcl_1.test&#x27;</span><br><span class="line"><span class="meta">#</span><span class="bash"> 主备切换时主库的标识</span></span><br><span class="line">*.fal_server=&#x27;orcl_2.test&#x27;</span><br><span class="line"><span class="meta">#</span><span class="bash"> 当前需要配置的实例，即 主（orcl_1，orcl_2）</span></span><br><span class="line">*.log_archive_config=&#x27;DG_CONFIG=(orcl_1,orcl_2)&#x27;</span><br><span class="line"><span class="meta">#</span><span class="bash"> 当前库恢复 日志文件 的位置，如果么有这个文件夹，可以手动创建，</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 命名方式：/data/oracle/fast_recovery_area/xxxx，可自己定义</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> DB_UNIQUE_NAME：当前实例唯一标识</span></span><br><span class="line">*.log_archive_dest_1=&#x27;LOCATION=/data/oracle/fast_recovery_area/orcl/archivelog LGWR VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=orcl_1&#x27;</span><br><span class="line"><span class="meta">#</span><span class="bash"> SERVICE远端实例的网络标识，即前面网络配置中的orcl1</span></span><br><span class="line">*.log_archive_dest_2=&#x27;SERVICE=orcl1 ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=orcl_2&#x27;</span><br><span class="line">*.log_archive_dest_state_1=&#x27;ENABLE&#x27;</span><br><span class="line">*.log_archive_dest_state_2=&#x27;ENABLE&#x27;</span><br><span class="line"><span class="meta">#</span><span class="bash"> log_file_name_convert=‘dir1’,<span class="string">&#x27;dir2&#x27;</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 表示当前主库发生主备角色转换时，原备库目录dir1’下的日志文件会转换并生成到原主库的dir2目录下</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 这里两个文件可以命名为一样</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 同上面一样，没有的话需要手动创建</span></span><br><span class="line">*.log_file_name_convert=&#x27;/data/oracle/oradata/orcl/&#x27;,&#x27;/data/oracle/oradata/orcl/&#x27;</span><br><span class="line">*.standby_file_management=&#x27;AUTO&#x27;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>重建spfile</li>
+</ul>
+<p>  首先备份原spfile</p>
+  <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">-- sql命令行查询spfile位置</span><br><span class="line">show parameter spfile</span><br><span class="line">-- 退出SQL命令行，拷贝原spfile路径以实际路径为准</span><br><span class="line">quit;</span><br><span class="line">cp path/spfileorcl.ora path/spfileorcl.ora.bak</span><br><span class="line">-- 创建spfile，这里测试时pfile文件名为initorcl.ora，实际操作中以自己的为准</span><br><span class="line">-- 先关闭数据库，生产环境关闭数据库谨慎操作，确认无线上操作</span><br><span class="line">shutdown immediate;</span><br><span class="line"></span><br><span class="line">CREATE SPFILE FROM PFILE=&#x27;initorcl.ora&#x27;;</span><br><span class="line">-- 复制完后，重启数据库</span><br><span class="line">statup;</span><br></pre></td></tr></table></figure>
+<h4 id="5）创建controlfile，datafile文件夹，用作rman备份"><a href="#5）创建controlfile，datafile文件夹，用作rman备份" class="headerlink" title="5）创建controlfile，datafile文件夹，用作rman备份"></a>5）创建controlfile，datafile文件夹，用作rman备份</h4><p><strong>主库</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 1.----------------------------------------------------------------</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 切换root用户</span></span><br><span class="line">su root</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 创建datafile文件位置，以下为实例，规则自定义，这里放在了<span class="variable">$oracle_home</span>下</span></span><br><span class="line">mkdir -p /data/oracle/oradata/orcl/datafile/</span><br><span class="line"><span class="meta">#</span><span class="bash"> 更新所有权</span></span><br><span class="line">chown -R oracle:oinstall /data/oracle/oradata/orcl/datafile</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 创建controlfile文件位置，以下为实例，规则自定义，这里放在了<span class="variable">$oracle_home</span>下</span></span><br><span class="line">mkdir -p /data/oracle/oradata/orcl/controlfile</span><br><span class="line"><span class="meta">#</span><span class="bash"> 更新所有权</span></span><br><span class="line">chown -R oracle:oinstall /data/oracle/oradata/orcl/controlfile</span><br><span class="line"><span class="meta">#</span><span class="bash"> 创建archivelog文件夹</span></span><br><span class="line">mkdir -p /data/oracle/fast_recovery_area/orcl/archivelog</span><br><span class="line"><span class="meta">#</span><span class="bash"> 授权</span></span><br><span class="line">chown -R oracle:oinstall /data/oracle/fast_recovery_area/orcl/archivelog</span><br><span class="line"><span class="meta">#</span><span class="bash"> 2.----------------------------------------------------------------</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 切换 oracle用户</span></span><br><span class="line">su -l oracle</span><br><span class="line"><span class="meta">#</span><span class="bash"> 进入 rman</span></span><br><span class="line">rman target /</span><br><span class="line"><span class="meta">#</span><span class="bash"> rman配置</span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> configure controlfile autobackup on;</span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> configure controlfile autobackup format <span class="keyword">for</span> device <span class="built_in">type</span> disk to <span class="string">&#x27;/data/oracle/oradata/orcl/controlfile/%F&#x27;</span>;</span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> backup device <span class="built_in">type</span> disk format <span class="string">&#x27;/data/oracle/oradata/orcl/datafile/%U&#x27;</span> database plus archivelog;</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oralce-insatll-8.jpg"></p>
+<p><strong>备库</strong></p>
+<ul>
+<li><u><em>[重要]</em></u>上述步骤操作完后，将controlfile和datafile底下的文件全部拷贝到备库中对应目录下</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 1.----------------------------------------------------------------</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 切换root用户</span></span><br><span class="line">su root</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 创建datafile文件位置，以下为实例，规则自定义，这里放在了<span class="variable">$oracle_home</span>下</span></span><br><span class="line">mkdir -p /data/oracle/oradata/orcl/datafile/backup</span><br><span class="line"><span class="meta">#</span><span class="bash"> 更新所有权</span></span><br><span class="line">chown -R oracle:oinstall /data/oracle/oradata/orcl/datafile</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 创建controlfile文件位置，以下为实例，规则自定义，这里放在了<span class="variable">$oracle_home</span>下</span></span><br><span class="line">mkdir -p /data/oracle/oradata/orcl/controlfile/backup</span><br><span class="line"><span class="meta">#</span><span class="bash"> 更新所有权</span></span><br><span class="line">chown -R oracle:oinstall /data/oracle/oradata/orcl/controlfile</span><br><span class="line"><span class="meta">#</span><span class="bash"> 创建archivelog文件夹</span></span><br><span class="line">mkdir -p /data/oracle/fast_recovery_area/orcl/archivelog</span><br><span class="line"><span class="meta">#</span><span class="bash"> 授权</span></span><br><span class="line">chown -R oracle:oinstall /data/oracle/fast_recovery_area/orcl/archivelog</span><br></pre></td></tr></table></figure>
+<p>拷贝主库控制文件到备库</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">scp /data/oracle/oradata/orcl/datafile/* 目的ip:/data/oracle/oradata/orcl/datafile/</span><br><span class="line">scp /data/oracle/oradata/orcl/controlfile/* 目的ip:/data/oracle/oradata/orcl/controlfile/</span><br></pre></td></tr></table></figure>
+
+<h4 id="6）-备库开始nomount（非归档）模式"><a href="#6）-备库开始nomount（非归档）模式" class="headerlink" title="6） 备库开始nomount（非归档）模式"></a>6） 备库开始nomount（非归档）模式</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 进入sql命令行</span></span><br><span class="line">sqlplus / as sysdba</span><br></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 开启nomount</span></span><br><span class="line"><span class="operator">&gt;</span> shutdown immediate;</span><br><span class="line"><span class="operator">&gt;</span> startup nomount;</span><br><span class="line"><span class="comment">-- 退出</span></span><br><span class="line">exit;</span><br></pre></td></tr></table></figure>
+<h4 id="7）主库备份文件到备库"><a href="#7）主库备份文件到备库" class="headerlink" title="7）主库备份文件到备库"></a>7）主库备份文件到备库</h4><p>这个过程可能比较久，耐心等待</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 进入rman</span></span><br><span class="line">rman target /</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 连接备库</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> connect auxiliary 账号/密码@备库网络通讯标识</span></span><br><span class="line">connect auxiliary sys/123456@orcl1</span><br></pre></td></tr></table></figure>
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oralce-insatll-9.jpg"></p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 开始同步</span><br><span class="line"># nofilenamecheck命令表示不检查，主备备份文件夹名称一致时需要使用该参数</span><br><span class="line">duplicate target database for standby nofilenamecheck;</span><br></pre></td></tr></table></figure>
+<h4 id="8）创建归档日志"><a href="#8）创建归档日志" class="headerlink" title="8）创建归档日志"></a>8）创建归档日志</h4><p>​    redo log是主备同步的重要文件，并且要求主备上面redo log文件的大小必须一致</p>
+<p>​    创建standby logfile备库归档日志，除oracle_home外的路径可自定义，这个过程可能很慢，取决于机器性能，*<u>主库/备库需要做同样的操作</u>*</p>
+<ul>
+<li><p>先创建好文件夹（主/备）</p>
+<p>先退出oracle用户</p>
+</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">mkdir -p /data/oracle/product/11.2.0/redolog</span><br><span class="line">chown -R oracle:oinstall /data/oracle/product/11.2.0/redolog</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>创建redo log（主/备）</p>
+<p>进入oracle用户</p>
+</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> DATABASE <span class="keyword">ADD</span> STANDBY LOGFILE <span class="string">&#x27;/data/oracle/product/11.2.0/redolog/rdo01_dg1.log&#x27;</span> size <span class="number">512</span>M;</span><br><span class="line"><span class="keyword">ALTER</span> DATABASE <span class="keyword">ADD</span> STANDBY LOGFILE <span class="string">&#x27;/data/oracle/product/11.2.0/redolog/rdo02_dg1.log&#x27;</span> size <span class="number">512</span>M;</span><br><span class="line"><span class="keyword">ALTER</span> DATABASE <span class="keyword">ADD</span> STANDBY LOGFILE <span class="string">&#x27;/data/oracle/product/11.2.0/redolog/rdo03_dg1.log&#x27;</span> size <span class="number">512</span>M;</span><br></pre></td></tr></table></figure>
+<h3 id="2-开始同步"><a href="#2-开始同步" class="headerlink" title="2. 开始同步"></a>2. 开始同步</h3><h4 id="1）备库开始同步"><a href="#1）备库开始同步" class="headerlink" title="1）备库开始同步"></a>1）备库开始同步</h4><figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 进入数据库</span></span><br><span class="line">sqlplus <span class="operator">/</span> <span class="keyword">as</span> sysdba</span><br><span class="line"><span class="comment">-- 查看实例状态是否mount模式</span></span><br><span class="line"><span class="keyword">select</span> instance_name,status <span class="keyword">from</span> v$instance;</span><br></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 主/备查看日志队列是否正常，正常情况下主/备日志队列号是一致的</span></span><br><span class="line"><span class="keyword">SELECT</span> SEQUENCE#, REGISTRAR, FIRST_TIME, NEXT_TIME, APPLIED <span class="keyword">FROM</span> V$ARCHIVED_LOG <span class="keyword">ORDER</span> <span class="keyword">BY</span> SEQUENCE#;</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> SEQUENCE#,APPLIED <span class="keyword">FROM</span> V$ARCHIVED_LOG <span class="keyword">ORDER</span> <span class="keyword">BY</span> SEQUENCE#;</span><br></pre></td></tr></table></figure>
+<p>日志队列查询结果：</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">SEQUENCE# REGISTR FIRST_TIM NEXT_TIME APPLIED</span><br><span class="line">---------- ------- --------- --------- ---------</span><br><span class="line">	22 LGWR    14-OCT-21 14-OCT-21 NO</span><br><span class="line">	22 LGWR    14-OCT-21 14-OCT-21 YES</span><br><span class="line">	23 LGWR    14-OCT-21 15-OCT-21 NO</span><br><span class="line">	23 LGWR    14-OCT-21 15-OCT-21 YES</span><br><span class="line">	24 ARCH    15-OCT-21 15-OCT-21 NO</span><br><span class="line">	24 ARCH    15-OCT-21 15-OCT-21 YES</span><br><span class="line">	25 LGWR    15-OCT-21 15-OCT-21 NO</span><br><span class="line">	25 LGWR    15-OCT-21 15-OCT-21 YES</span><br></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 开启实时同步</span></span><br><span class="line"><span class="keyword">alter</span> database recover managed standby database <span class="keyword">using</span> <span class="keyword">current</span> logfile <span class="keyword">disconnect</span> <span class="keyword">from</span> session;</span><br><span class="line"><span class="comment">-- 取消同步</span></span><br><span class="line"><span class="keyword">alter</span> database recover managed standby database cancel;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>开启后稍等片刻再次查证</li>
+</ul>
+<p>【查证方式一】</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">SELECT SEQUENCE#, REGISTRAR, FIRST_TIME, NEXT_TIME, APPLIED FROM V$ARCHIVED_LOG ORDER BY SEQUENCE#;</span><br></pre></td></tr></table></figure>
+<p>【查证方式二】</p>
+<p>直接在数据库主库新增，看备库是否同步</p>
+<h4 id="附录："><a href="#附录：" class="headerlink" title="附录："></a>附录：</h4><h4 id="1-可能用到的命令"><a href="#1-可能用到的命令" class="headerlink" title="1.可能用到的命令"></a>1.可能用到的命令</h4><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">&gt;</span><span class="bash"> recover managed standby database using current logfile disconnect from session;</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> startup force mount pfile=<span class="string">&#x27;/data/oracle/product/11.2.0/dbs/initorcl.ora&#x27;</span>;</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> redo <span class="built_in">log</span></span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> select group<span class="comment">#,member from v$logfile;</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查找service_name</span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> show parameter service;</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 开启数据库</span></span><br><span class="line">alter database open;</span><br><span class="line"><span class="meta">#</span><span class="bash"> </span></span><br><span class="line"> select error from v$archive_dest where target=&#x27;STANDBY&#x27;;</span><br><span class="line"><span class="meta">#</span><span class="bash"> 修改db启动项和停止项命令，然后修改ORACLE_HOME_LISTNER=<span class="variable">$1</span>为ORACLE_HOME_LISTNER=<span class="variable">$ORACLE_HOME</span></span></span><br><span class="line">vim $ORACLE_HOME/bin/dbstart</span><br><span class="line">vim $ORACLE_HOME/bin/dbshut</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-常见问题"><a href="#2-常见问题" class="headerlink" title="2.常见问题"></a>2.常见问题</h4><p>1）日志不同步</p>
+<ul>
+<li>主库查验</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- sql 命令行执行</span></span><br><span class="line"><span class="keyword">show</span> <span class="keyword">parameter</span> log_archive_dest_state_2;</span><br><span class="line"><span class="comment">-- 处理方式</span></span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">SYSTEM</span> <span class="keyword">SET</span> LOG_ARCHIVE_DEST_STATE_2<span class="operator">=</span><span class="string">&#x27;ENABLE&#x27;</span>; </span><br></pre></td></tr></table></figure>
+
+<p>正常情况：value为enable</p>
+<p>NAME                     TYPE     VALUE</p>
+<hr>
+<p>log_archive_dest_state_2         string     enable<br>log_archive_dest_state_20         string     enable<br>log_archive_dest_state_21         string     enable<br>log_archive_dest_state_22         string     enable<br>log_archive_dest_state_23         string     enable<br>log_archive_dest_state_24         string     enable<br>log_archive_dest_state_25         string     enable<br>log_archive_dest_state_26         string     enable<br>log_archive_dest_state_27         string     enable<br>log_archive_dest_state_28         string     enable<br>log_archive_dest_state_29         string     enable</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- sql 命令行执行</span></span><br><span class="line"><span class="keyword">show</span> <span class="keyword">parameter</span> log_archive_dest_2</span><br><span class="line"><span class="comment">-- 处理方式</span></span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">SYSTEM</span> <span class="keyword">SET</span> LOG_ARCHIVE_DEST_2<span class="operator">=</span><span class="string">&#x27;SERVICE=orcl1  ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=orcl_dg02&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>异常情况：value为空</p>
+<p>NAME                     TYPE     VALUE</p>
+<hr>
+<p>log_archive_dest_2             string<br>log_archive_dest_20             string<br>log_archive_dest_21             string<br>log_archive_dest_22             string<br>log_archive_dest_23             string<br>log_archive_dest_24             string<br>log_archive_dest_25             string<br>log_archive_dest_26             string<br>log_archive_dest_27             string<br>log_archive_dest_28             string<br>log_archive_dest_29             string</p>
+]]></content>
+      <categories>
+        <category>Oracle</category>
+      </categories>
+      <tags>
+        <tag>主从同步</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Oracle DG主备切换</title>
+    <url>/2021/10/20/Oracle%20DG%E4%B8%BB%E5%A4%87%E5%88%87%E6%8D%A2/</url>
+    <content><![CDATA[<p>环境信息</p>
+<blockquote>
+<p>系统：CentOS 7<br>Oracle版本：Oracle 11g R2(11.0.2.1.0)</p>
+<p>场景：主备，主库读写，备库读</p>
+</blockquote>
+<p>接上文，本部分主要介绍主备切换</p>
+<p>主备切换经历主库变备库，备库变主库两个主要阶段，以下三幅图顺序展示了这些变化</p>
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oracle-dg-sw-01.jpg"></p>
+<div align="center"><strong>图一</strong></div> 
+
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oracle-dg-sw-02.jpg"></p>
+<div align="center"><strong>图二</strong></div> 
+
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oracle-dg-sw-03.jpg"></p>
+<div align="center"><strong>图三</strong></div> 
+
+<h4 id="1-切换先决条件（务必确认完成）"><a href="#1-切换先决条件（务必确认完成）" class="headerlink" title="1. 切换先决条件（务必确认完成）"></a>1. 切换先决条件（务必确认完成）</h4><p>1）校验初始化参数，确保主备库中的参数LOG_ARCHIVE_DEST_n和ARCHIVE_DEST_STATE_n正常配置。<br>2）校验备库是否为日志开启模式，即上篇中讲到的ARCHIVELOG是否开启。<br>3）确保主库和备库的具有相匹配的temporary file。<br>4）消除应用重做时可能对将成为新主数据库的备用数据库有效的任何延迟。<br>具体做法（未切换前备库操作)</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"> <span class="comment">-- sql命令行</span></span><br><span class="line"><span class="keyword">COLUMN</span> NAME FORMAT A18</span><br><span class="line"><span class="keyword">COLUMN</span> <span class="keyword">VALUE</span> FORMAT A16</span><br><span class="line"><span class="keyword">COLUMN</span> TIME_COMPUTED FORMAT A24</span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> V$DATAGUARD_STATS;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oracle-dg-sw-04.jpg"></p>
+<p>通过上图发现没有延时<br>5）确保其他实例关闭，即在角色转换期间，其他实例不能在线，等当前实例切换完毕后再重新联机；具体操作时关闭当前库的监听即可。</p>
+<h4 id="2-开始切换"><a href="#2-开始切换" class="headerlink" title="2.开始切换"></a>2.开始切换</h4><p>​        切换分两个阶段进行。在第一阶段，现有的主数据库会过渡到备用角色。在第二阶段，备用数据库过渡到主要角色。</p>
+<h5 id="1）主库切换"><a href="#1）主库切换" class="headerlink" title="1）主库切换"></a>1）主库切换</h5><p>关闭当前库的监听</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">lsnrctl stop</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 1. 校验主库状态</span></span><br><span class="line"><span class="keyword">SELECT</span> SWITCHOVER_STATUS <span class="keyword">FROM</span> V$DATABASE;</span><br><span class="line"><span class="comment">-- 如果主库状态为 TO STANDBY表示可切换，如果不是则检查参数LOG_ARCHIVE_DEST_n配置是否正常。</span></span><br><span class="line"><span class="comment">-- 2. 开始切换</span></span><br><span class="line"><span class="keyword">ALTER</span> DATABASE <span class="keyword">COMMIT</span> <span class="keyword">TO</span> SWITCHOVER <span class="keyword">TO</span> PHYSICAL STANDBY;</span><br><span class="line"><span class="comment">-- 3. 重启主库</span></span><br><span class="line"> SHUTDOWN IMMEDIATE;</span><br><span class="line"> STARTUP MOUNT;</span><br><span class="line"> <span class="comment">--4. 校验是否切换成功,如果成功状态为 TO PRIMARY</span></span><br><span class="line"> <span class="keyword">SELECT</span> SWITCHOVER_STATUS <span class="keyword">FROM</span> V$DATABASE;</span><br></pre></td></tr></table></figure>
+
+<p>如果主库状态时 SESSIONS ACTIVE，则需要切换其状态</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> DATABASE <span class="keyword">COMMIT</span> <span class="keyword">TO</span> SWITCHOVER <span class="keyword">TO</span> PHYSICAL STANDBY <span class="keyword">WITH</span> SESSION SHUTDOWN;</span><br></pre></td></tr></table></figure>
+
+<h5 id="2）备库切换"><a href="#2）备库切换" class="headerlink" title="2）备库切换"></a>2）备库切换</h5><figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 1. 校验主库状态</span></span><br><span class="line"><span class="keyword">SELECT</span> SWITCHOVER_STATUS <span class="keyword">FROM</span> V$DATABASE;</span><br><span class="line"><span class="comment">-- 2. 如果备库状态为TO PRIMARY,则可直接切换</span></span><br><span class="line"><span class="keyword">ALTER</span> DATABASE <span class="keyword">COMMIT</span> <span class="keyword">TO</span> SWITCHOVER <span class="keyword">TO</span> <span class="keyword">PRIMARY</span>;</span><br><span class="line"><span class="comment">-- 3. 重启主库</span></span><br><span class="line"> SHUTDOWN IMMEDIATE;</span><br><span class="line"> STARTUP;</span><br><span class="line"> <span class="comment">--4. 校验是否切换成功,如果成功状态为 TO PRIMARY</span></span><br><span class="line"> <span class="keyword">SELECT</span> SWITCHOVER_STATUS <span class="keyword">FROM</span> V$DATABASE;</span><br><span class="line"> <span class="comment">--5. 开启强制日志</span></span><br><span class="line"> <span class="keyword">ALTER</span> <span class="keyword">SYSTEM</span> SWITCH LOGFILE;</span><br></pre></td></tr></table></figure>
+
+<p>如果备库为SESSION ACTIVE，则需要使用SESSION SHUTDOWN方式关闭</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">ALTER DATABASE COMMIT TO SWITCHOVER TO PRIMARY WITH SESSION SHUTDOWN;</span><br></pre></td></tr></table></figure>
+
+<h5 id="3）校验"><a href="#3）校验" class="headerlink" title="3）校验"></a>3）校验</h5><p>主备库切换过来以后，开启原主库监听</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">lsnrctl start</span><br></pre></td></tr></table></figure>
+
+<p>进入sql命令行</p>
+<figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 查看主库状态，如果为TO PRIMARY则正常</span></span><br><span class="line"><span class="keyword">SELECT</span> SWITCHOVER_STATUS <span class="keyword">FROM</span> V$DATABASE;</span><br><span class="line"><span class="comment">-- 开启数据库</span></span><br><span class="line"><span class="keyword">ALTER</span> DATABASE <span class="keyword">OPEN</span>;</span><br><span class="line"><span class="comment">-- 开启实时同步状态</span></span><br><span class="line"><span class="keyword">ALTER</span> DATABASE RECOVER MANAGED STANDBY DATABASE <span class="keyword">USING</span> <span class="keyword">CURRENT</span> LOGFILE <span class="keyword">DISCONNECT</span> <span class="keyword">FROM</span> SESSION;</span><br></pre></td></tr></table></figure>
+
+<p>等待片刻，查证数据是否开始同步，状态都是YES，则表示已经正常</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">SELECT SEQUENCE#, REGISTRAR, FIRST_TIME, NEXT_TIME, APPLIED FROM V$ARCHIVED_LOG ORDER BY SEQUENCE#;</span><br></pre></td></tr></table></figure>
+<h5 id="4）总结"><a href="#4）总结" class="headerlink" title="4）总结"></a>4）总结</h5><blockquote>
+<p>数据库宕机或其他非正常方式停止服务后，如短期内可以恢复，但是切换的时间代价大于恢复的时间代价，不建议做切换，具体情况需要根据实际情况做权衡。</p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>Oracle</category>
+      </categories>
+      <tags>
+        <tag>主备切换</tag>
+      </tags>
+  </entry>
 </search>

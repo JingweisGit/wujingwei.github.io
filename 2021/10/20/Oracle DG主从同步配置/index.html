@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, shrink-to-fit=no">
+    <meta name="referrer" content="origin">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <title>Oracle DG主从同步配置</title>
+    <link rel="shortcut icon" href="#"/>
+
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/LongCang.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/Monda.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/NotoSansSC.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/Playball.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/PTMono.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/RobotoSlab.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/Rosario.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/UbuntuMono.css">
+
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/post.css">
+    
+        <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/normal.css">
+    
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/jquery-3.4.1.min.js"></script>
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+<body>
+    <a id="cover"></a>
+    <div id="header">
+    <div class="header">
+        <div class="vertical">
+            <div class="inner">
+                <h1 class="header-subtitle">Oracle DG主从同步配置</h1>
+                <div class="header-subinfo">
+                    <p class="article-info-text">
+                        <span>
+                            <i class="iconfont icon-time"></i> 发表时间：2021-10-20
+                        </span>
+                        
+                            <span id="/2021/10/20/Oracle DG主从同步配置/" class="leancloud_visitors" data-flag-title="Oracle DG主从同步配置">
+                                <i class="iconfont icon-browse"></i> 阅读：<sapn class="leancloud-visitors-count"></span>
+                            </span>
+                        
+                        <span>
+                            <i class="iconfont icon-interactive"></i> 评论：<span class="valine-comment-count" data-xid="/2021/10/20/Oracle DG主从同步配置/"></span>
+                        </span>  
+                    </p>                 
+                </div>
+            </div>
+        </div>
+        <canvas id="articleHeaderCanvas"></canvas>
+    </div>
+</div>
+    <div id="container">
+    <div id="content">
+        <div id="article">
+    <div class="toc"></div>
+    <div class="article-body">
+        <p>本部分主要介绍主从同步</p>
+<p>环境信息</p>
+<blockquote>
+<p>系统：CentOS 7<br>Oracle版本：Oracle 11g R2(11.0.2.1.0)</p>
+<p>场景：主从，主库读写，从库读</p>
+<p>文档说明：文档中的配置，有些是主/备都要配置的，需要注意</p>
+</blockquote>
+<p>官方参考文档：<a target="_blank" rel="noopener" href="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/Oracle%20DG%E5%AE%98%E6%96%B9%E6%96%87%E6%A1%A3.pdf">Oracle DG官方文档.pdf</a></p>
+<h3 id="1-配置准备"><a href="#1-配置准备" class="headerlink" title="1.  配置准备"></a>1.  配置准备</h3><h4 id="1-修改实例唯一标识-db-unique-name"><a href="#1-修改实例唯一标识-db-unique-name" class="headerlink" title="1) 修改实例唯一标识 db_unique_name"></a>1) 修改实例唯一标识 db_unique_name</h4><p>该标识是区分实例的依据，后面会用到（很重要）</p>
+<ul>
+<li>进入SQL命令行</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sqlplus / as sysdba</span><br></pre></td></tr></table></figure>
+<ul>
+<li>先查看一下</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">parameter</span> db_unique_name</span><br></pre></td></tr></table></figure>
+<ul>
+<li>开始修改</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 示例 alter system set db_unique_name=&#x27;orcl_dg02[实例名称，自定义]&#x27; scope=spfile;</span></span><br><span class="line"><span class="keyword">alter</span> <span class="keyword">system</span> <span class="keyword">set</span> db_unique_name<span class="operator">=</span><span class="string">&#x27;orcl_dg01&#x27;</span> <span class="keyword">scope</span><span class="operator">=</span>spfile;</span><br><span class="line"></span><br><span class="line">shutdown immediate;</span><br><span class="line"></span><br><span class="line">startup;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>修改完成后确认一下，看是否修改过来</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 方式一：</span></span><br><span class="line"><span class="keyword">show</span> <span class="keyword">parameter</span> db_unique_name</span><br><span class="line"><span class="comment">-- 方式二：退出到shell命令行</span></span><br><span class="line">lsnrctl status</span><br></pre></td></tr></table></figure>
+<h4 id="2-归档状态检测"><a href="#2-归档状态检测" class="headerlink" title="2) 归档状态检测"></a>2) 归档状态检测</h4><ul>
+<li>检查</li>
+</ul>
+<p>配置DG必须使数主库处于归档状态，具体检测方法为：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sqlplus / as sysdba</span><br></pre></td></tr></table></figure>
+<p>查看归档状态</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SQL</span><span class="operator">&gt;</span> archive log list</span><br></pre></td></tr></table></figure>
+
+<p>正常情况为：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Database log mode              Archive Mode</span><br><span class="line">Automatic archival             Enabled</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+<p>非开启状态为：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Database log mode              Archive Mode</span><br><span class="line">Automatic archival             Enabled</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+<ul>
+<li>开启</li>
+</ul>
+<p>如果未开启，应先开启归档，操作方法为：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 1.关闭数据库</span></span><br><span class="line">shutdown immediate</span><br><span class="line"><span class="comment">-- 2.启动mount模式</span></span><br><span class="line">startup mount</span><br><span class="line"><span class="comment">-- 3.开启归档模式（关闭为alter database noarchivelog;）</span></span><br><span class="line"><span class="keyword">alter</span> database archivelog;</span><br><span class="line"></span><br><span class="line"><span class="keyword">alter</span> database <span class="keyword">open</span>;</span><br><span class="line"><span class="comment">-- 4. 检查是否开启</span></span><br><span class="line">archive log list;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>日志状态检查</li>
+</ul>
+<p>说明：主库日志必须强制开启状态</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">alter</span> database force logging;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="3-配置网络通信与监听"><a href="#3-配置网络通信与监听" class="headerlink" title="3) 配置网络通信与监听"></a>3) 配置网络通信与监听</h4><p>——————重点来了——————</p>
+<blockquote>
+<p>说明：</p>
+<p>$ORACLE_HOME：Oracle data目录全局变量，oracle的数据/恢复文件/配置等都放在这个路径底下</p>
+</blockquote>
+<ul>
+<li>配置oracle密码文件</li>
+</ul>
+<p><u>可能存在，如存在不需要再生成</u>，这个文件很重要，主备要保持一致，常见做法是将主库的复制到备用库对应位置，复制前最好先备份</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 1.进入目录</span></span><br><span class="line">cd $ORACLE_HOME/dbs/</span><br><span class="line"><span class="meta">#</span><span class="bash"> 2. orapworcl为密码配置文件名称，命名规则为[orapw+实例名称]，可通过sql查询</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> select instance_name from v<span class="variable">$instance</span></span></span><br><span class="line">orapwd file=$ORACLE_HOME/dbs/orapworcl password=syspassword entries=30;</span><br><span class="line"><span class="meta">#</span><span class="bash"> 复制到备库对应目录</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 语法 scp 文件名 ip:路径</span></span><br><span class="line">scp orapworcl ip:/data/oracle/product/11.2.0/dbs/</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>配置监听 istener.ora （主/备都要配置）</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 1. 进入编辑模式</span></span><br><span class="line">vim $ORACLE_HOME/network/admin/listener.ora</span><br><span class="line"><span class="meta">#</span><span class="bash"> 2. 开始编辑</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> SID_LIST_LISTENER是必须添加的</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> GLOBAL_DBNAME可通过SQL查询：select * from global_name;</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> ORACLE_HOME可以通过cat命令查看当前HOME位置：cat <span class="variable">$ORACLE_HOME</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> SID_NAME可通过SQL查询：select instance_name from  V<span class="variable">$instance</span>;</span></span><br><span class="line">SID_LIST_LISTENER =</span><br><span class="line">  (SID_LIST =</span><br><span class="line">    (SID_DESC =</span><br><span class="line">      (GLOBAL_DBNAME = ORCL.TEST)</span><br><span class="line">      (SID_NAME = orcl)</span><br><span class="line">      (ORACLE_HOME = /data/oracle/product/11.2.0)</span><br><span class="line">    )</span><br><span class="line">  )</span><br><span class="line"></span><br><span class="line">LISTENER =</span><br><span class="line">  (DESCRIPTION_LIST =</span><br><span class="line">    (DESCRIPTION =</span><br><span class="line">      (ADDRESS = (PROTOCOL = IPC)(KEY = EXTPROC1521))</span><br><span class="line">      (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))</span><br><span class="line">    )</span><br><span class="line">  )</span><br><span class="line"></span><br><span class="line">ADR_BASE_LISTENER = /data/oracle</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>配置网络监听tnsnames.ora （主/备都要配置）</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 1.进入编辑模式</span></span><br><span class="line">vim $ORACLE_HOME/network/admin/tnsnames.ora</span><br><span class="line"><span class="meta">#</span><span class="bash"> 2.开始编辑</span></span><br><span class="line">ORCL = # 相当于网络名称，后面tnsping的时候直接ping这个名称</span><br><span class="line">  (DESCRIPTION =</span><br><span class="line">    (ADDRESS = (PROTOCOL = TCP)(HOST = 192.168.75.132 )(PORT = 1521)) # 当前库IP</span><br><span class="line">    (CONNECT_DATA =</span><br><span class="line">      (SERVER = DEDICATED)</span><br><span class="line">      (SERVICE_NAME = orcl_1.test) # 可通过SQL查询：show parameter service_names;</span><br><span class="line">      (UR=A) # 这里必须加上</span><br><span class="line">    )</span><br><span class="line">  )</span><br><span class="line"><span class="meta">#</span><span class="bash"> 下同，不在赘述</span></span><br><span class="line">ORCL1 =</span><br><span class="line">  (DESCRIPTION =</span><br><span class="line">   (ADDRESS_LIST =</span><br><span class="line">    (ADDRESS = (PROTOCOL = TCP)(HOST = 192.168.75.133)(PORT = 1521))</span><br><span class="line">   )</span><br><span class="line">    (CONNECT_DATA =</span><br><span class="line">      (SERVICE_NAME = orcl_2.test)</span><br><span class="line">      (SERVER = DEDICATED)</span><br><span class="line">      (UR=A)</span><br><span class="line">    )</span><br><span class="line">  )</span><br><span class="line"><span class="meta"> #</span><span class="bash"> 3. 重启监听</span></span><br><span class="line">lsnrctl reload</span><br><span class="line"><span class="meta">#</span><span class="bash"> 重启后查看是否成功</span></span><br><span class="line">lsnrctl status</span><br><span class="line"><span class="meta">#</span><span class="bash"> 4 验证网络监听</span></span><br><span class="line">tnsping orcl1 # orcl1即上面配置的名称 ORCL1</span><br><span class="line">tnsping orcl</span><br></pre></td></tr></table></figure>
+
+<h4 id="4）主库配置Profile文件-（主-备都要配置）"><a href="#4）主库配置Profile文件-（主-备都要配置）" class="headerlink" title="4）主库配置Profile文件 （主/备都要配置）"></a>4）主库配置Profile文件 （主/备都要配置）</h4><p>这里先简介以下pfile和spile， pfile是oracle静态的初始化文件，spfile是oracle二进制形式动态的初始化文件。Oracle在启动时会先加载spfile，如果spfile加载失败,才会去加载pfile。<br>    所以，为了让配置生效，我们会先创建pfile，在pfile里编辑好以后，再通过把pfile拷贝到spfile，具体分以下两步：</p>
+<p>​    1）编辑pfile<br>​    2）编辑spfile</p>
+<p>​    进入sql 命令行创建profile</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 进入SQL shell</span></span><br><span class="line">sqlplus / as sysdba</span><br><span class="line"><span class="meta">#</span><span class="bash"> 创建profile文件</span></span><br><span class="line">create pfile from spfile;</span><br><span class="line"><span class="meta">#</span><span class="bash"> 退出到shell</span></span><br><span class="line">quit;</span><br></pre></td></tr></table></figure>
+<ul>
+<li> 编辑主库配置文件</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> initorcl.ora为自己的配置文件，命名以自己的为准，规则为[init+实例名称]</span></span><br><span class="line">vi $ORACLE_HOME/dbs/initorcl.ora</span><br></pre></td></tr></table></figure>
+
+<p>开始编辑，以下为示例（示例中的注释在实际操作时不可以有），<u><em>配置文件需要仔细核对，否则会导致日志文件无法同步</em></u></p>
+<blockquote>
+<p>说明：备库配置文件模仿主库配置文件修改即可，正常情况只需要把实例标识做颠倒，如有其他不同，需要仔细核对</p>
+</blockquote>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">orcl.__db_cache_size=780140544</span><br><span class="line">orcl.__java_pool_size=4194304</span><br><span class="line">orcl.__large_pool_size=4194304</span><br><span class="line">orcl.__oracle_base=&#x27;/data/oracle&#x27;#ORACLE_BASE set from environment</span><br><span class="line">orcl.__pga_aggregate_target=645922816</span><br><span class="line">orcl.__sga_target=1073741824</span><br><span class="line">orcl.__shared_io_pool_size=0</span><br><span class="line">orcl.__shared_pool_size=272629760</span><br><span class="line">orcl.__streams_pool_size=0</span><br><span class="line">*.audit_file_dest=&#x27;/data/oracle/admin/orcl/adump&#x27;</span><br><span class="line">*.audit_trail=&#x27;db&#x27;</span><br><span class="line">*.compatible=&#x27;11.2.0.0.0&#x27;</span><br><span class="line">*.control_files=&#x27;/data/oracle/oradata/orcl/control01.ctl&#x27;,&#x27;/data/oracle/flash_recovery_area/orcl/control02.ctl&#x27;</span><br><span class="line">*.db_block_size=8192</span><br><span class="line">*.db_name=&#x27;orcl&#x27;</span><br><span class="line">*.db_recovery_file_dest=&#x27;/data/oracle/flash_recovery_area&#x27;</span><br><span class="line">*.db_recovery_file_dest_size=4070572032</span><br><span class="line">*.db_unique_name=&#x27;orcl_1&#x27; # 当前实例的唯一标识，必须有</span><br><span class="line">*.diagnostic_dest=&#x27;/data/oracle&#x27;</span><br><span class="line">*.dispatchers=&#x27;(PROTOCOL=TCP) (SERVICE=orclXDB)&#x27;</span><br><span class="line">*.open_cursors=300</span><br><span class="line">*.pga_aggregate_target=643825664</span><br><span class="line">*.processes=150</span><br><span class="line">*.remote_login_passwordfile=&#x27;EXCLUSIVE&#x27;</span><br><span class="line">*.sga_target=1073741824</span><br><span class="line">*.undo_tablespace=&#x27;UNDOTBS1&#x27;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash">-------------------------</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 以下为新增配置</span></span><br><span class="line"><span class="meta">#</span><span class="bash">-------------------------</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> cover文件位置，这里，参数1：主库，参数2：备库；可以有多个</span></span><br><span class="line">*.db_file_name_convert=&#x27;/data/oracle/oradata/&#x27;,&#x27;/data/oracle/oradata/&#x27;</span><br><span class="line"><span class="meta">#</span><span class="bash"> 主备切换时备库的标识，即当前库变为备库</span></span><br><span class="line">*.fal_client=&#x27;orcl_1.test&#x27;</span><br><span class="line"><span class="meta">#</span><span class="bash"> 主备切换时主库的标识</span></span><br><span class="line">*.fal_server=&#x27;orcl_2.test&#x27;</span><br><span class="line"><span class="meta">#</span><span class="bash"> 当前需要配置的实例，即 主（orcl_1，orcl_2）</span></span><br><span class="line">*.log_archive_config=&#x27;DG_CONFIG=(orcl_1,orcl_2)&#x27;</span><br><span class="line"><span class="meta">#</span><span class="bash"> 当前库恢复 日志文件 的位置，如果么有这个文件夹，可以手动创建，</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 命名方式：/data/oracle/fast_recovery_area/xxxx，可自己定义</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> DB_UNIQUE_NAME：当前实例唯一标识</span></span><br><span class="line">*.log_archive_dest_1=&#x27;LOCATION=/data/oracle/fast_recovery_area/orcl/archivelog LGWR VALID_FOR=(ALL_LOGFILES,ALL_ROLES) DB_UNIQUE_NAME=orcl_1&#x27;</span><br><span class="line"><span class="meta">#</span><span class="bash"> SERVICE远端实例的网络标识，即前面网络配置中的orcl1</span></span><br><span class="line">*.log_archive_dest_2=&#x27;SERVICE=orcl1 ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=orcl_2&#x27;</span><br><span class="line">*.log_archive_dest_state_1=&#x27;ENABLE&#x27;</span><br><span class="line">*.log_archive_dest_state_2=&#x27;ENABLE&#x27;</span><br><span class="line"><span class="meta">#</span><span class="bash"> log_file_name_convert=‘dir1’,<span class="string">&#x27;dir2&#x27;</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 表示当前主库发生主备角色转换时，原备库目录dir1’下的日志文件会转换并生成到原主库的dir2目录下</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 这里两个文件可以命名为一样</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 同上面一样，没有的话需要手动创建</span></span><br><span class="line">*.log_file_name_convert=&#x27;/data/oracle/oradata/orcl/&#x27;,&#x27;/data/oracle/oradata/orcl/&#x27;</span><br><span class="line">*.standby_file_management=&#x27;AUTO&#x27;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>重建spfile</li>
+</ul>
+<p>  首先备份原spfile</p>
+  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">-- sql命令行查询spfile位置</span><br><span class="line">show parameter spfile</span><br><span class="line">-- 退出SQL命令行，拷贝原spfile路径以实际路径为准</span><br><span class="line">quit;</span><br><span class="line">cp path/spfileorcl.ora path/spfileorcl.ora.bak</span><br><span class="line">-- 创建spfile，这里测试时pfile文件名为initorcl.ora，实际操作中以自己的为准</span><br><span class="line">-- 先关闭数据库，生产环境关闭数据库谨慎操作，确认无线上操作</span><br><span class="line">shutdown immediate;</span><br><span class="line"></span><br><span class="line">CREATE SPFILE FROM PFILE=&#x27;initorcl.ora&#x27;;</span><br><span class="line">-- 复制完后，重启数据库</span><br><span class="line">statup;</span><br></pre></td></tr></table></figure>
+<h4 id="5）创建controlfile，datafile文件夹，用作rman备份"><a href="#5）创建controlfile，datafile文件夹，用作rman备份" class="headerlink" title="5）创建controlfile，datafile文件夹，用作rman备份"></a>5）创建controlfile，datafile文件夹，用作rman备份</h4><p><strong>主库</strong></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 1.----------------------------------------------------------------</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 切换root用户</span></span><br><span class="line">su root</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 创建datafile文件位置，以下为实例，规则自定义，这里放在了<span class="variable">$oracle_home</span>下</span></span><br><span class="line">mkdir -p /data/oracle/oradata/orcl/datafile/</span><br><span class="line"><span class="meta">#</span><span class="bash"> 更新所有权</span></span><br><span class="line">chown -R oracle:oinstall /data/oracle/oradata/orcl/datafile</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 创建controlfile文件位置，以下为实例，规则自定义，这里放在了<span class="variable">$oracle_home</span>下</span></span><br><span class="line">mkdir -p /data/oracle/oradata/orcl/controlfile</span><br><span class="line"><span class="meta">#</span><span class="bash"> 更新所有权</span></span><br><span class="line">chown -R oracle:oinstall /data/oracle/oradata/orcl/controlfile</span><br><span class="line"><span class="meta">#</span><span class="bash"> 创建archivelog文件夹</span></span><br><span class="line">mkdir -p /data/oracle/fast_recovery_area/orcl/archivelog</span><br><span class="line"><span class="meta">#</span><span class="bash"> 授权</span></span><br><span class="line">chown -R oracle:oinstall /data/oracle/fast_recovery_area/orcl/archivelog</span><br><span class="line"><span class="meta">#</span><span class="bash"> 2.----------------------------------------------------------------</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 切换 oracle用户</span></span><br><span class="line">su -l oracle</span><br><span class="line"><span class="meta">#</span><span class="bash"> 进入 rman</span></span><br><span class="line">rman target /</span><br><span class="line"><span class="meta">#</span><span class="bash"> rman配置</span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> configure controlfile autobackup on;</span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> configure controlfile autobackup format <span class="keyword">for</span> device <span class="built_in">type</span> disk to <span class="string">&#x27;/data/oracle/oradata/orcl/controlfile/%F&#x27;</span>;</span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> backup device <span class="built_in">type</span> disk format <span class="string">&#x27;/data/oracle/oradata/orcl/datafile/%U&#x27;</span> database plus archivelog;</span></span><br></pre></td></tr></table></figure>
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oralce-insatll-8.jpg"></p>
+<p><strong>备库</strong></p>
+<ul>
+<li><u><em>[重要]</em></u>上述步骤操作完后，将controlfile和datafile底下的文件全部拷贝到备库中对应目录下</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 1.----------------------------------------------------------------</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 切换root用户</span></span><br><span class="line">su root</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 创建datafile文件位置，以下为实例，规则自定义，这里放在了<span class="variable">$oracle_home</span>下</span></span><br><span class="line">mkdir -p /data/oracle/oradata/orcl/datafile/backup</span><br><span class="line"><span class="meta">#</span><span class="bash"> 更新所有权</span></span><br><span class="line">chown -R oracle:oinstall /data/oracle/oradata/orcl/datafile</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 创建controlfile文件位置，以下为实例，规则自定义，这里放在了<span class="variable">$oracle_home</span>下</span></span><br><span class="line">mkdir -p /data/oracle/oradata/orcl/controlfile/backup</span><br><span class="line"><span class="meta">#</span><span class="bash"> 更新所有权</span></span><br><span class="line">chown -R oracle:oinstall /data/oracle/oradata/orcl/controlfile</span><br><span class="line"><span class="meta">#</span><span class="bash"> 创建archivelog文件夹</span></span><br><span class="line">mkdir -p /data/oracle/fast_recovery_area/orcl/archivelog</span><br><span class="line"><span class="meta">#</span><span class="bash"> 授权</span></span><br><span class="line">chown -R oracle:oinstall /data/oracle/fast_recovery_area/orcl/archivelog</span><br></pre></td></tr></table></figure>
+<p>拷贝主库控制文件到备库</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">scp /data/oracle/oradata/orcl/datafile/* 目的ip:/data/oracle/oradata/orcl/datafile/</span><br><span class="line">scp /data/oracle/oradata/orcl/controlfile/* 目的ip:/data/oracle/oradata/orcl/controlfile/</span><br></pre></td></tr></table></figure>
+
+<h4 id="6）-备库开始nomount（非归档）模式"><a href="#6）-备库开始nomount（非归档）模式" class="headerlink" title="6） 备库开始nomount（非归档）模式"></a>6） 备库开始nomount（非归档）模式</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 进入sql命令行</span></span><br><span class="line">sqlplus / as sysdba</span><br></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 开启nomount</span></span><br><span class="line"><span class="operator">&gt;</span> shutdown immediate;</span><br><span class="line"><span class="operator">&gt;</span> startup nomount;</span><br><span class="line"><span class="comment">-- 退出</span></span><br><span class="line">exit;</span><br></pre></td></tr></table></figure>
+<h4 id="7）主库备份文件到备库"><a href="#7）主库备份文件到备库" class="headerlink" title="7）主库备份文件到备库"></a>7）主库备份文件到备库</h4><p>这个过程可能比较久，耐心等待</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 进入rman</span></span><br><span class="line">rman target /</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 连接备库</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> connect auxiliary 账号/密码@备库网络通讯标识</span></span><br><span class="line">connect auxiliary sys/123456@orcl1</span><br></pre></td></tr></table></figure>
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oralce-insatll-9.jpg"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># 开始同步</span><br><span class="line"># nofilenamecheck命令表示不检查，主备备份文件夹名称一致时需要使用该参数</span><br><span class="line">duplicate target database for standby nofilenamecheck;</span><br></pre></td></tr></table></figure>
+<h4 id="8）创建归档日志"><a href="#8）创建归档日志" class="headerlink" title="8）创建归档日志"></a>8）创建归档日志</h4><p>​    redo log是主备同步的重要文件，并且要求主备上面redo log文件的大小必须一致</p>
+<p>​    创建standby logfile备库归档日志，除oracle_home外的路径可自定义，这个过程可能很慢，取决于机器性能，*<u>主库/备库需要做同样的操作</u>*</p>
+<ul>
+<li><p>先创建好文件夹（主/备）</p>
+<p>先退出oracle用户</p>
+</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /data/oracle/product/11.2.0/redolog</span><br><span class="line">chown -R oracle:oinstall /data/oracle/product/11.2.0/redolog</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>创建redo log（主/备）</p>
+<p>进入oracle用户</p>
+</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> DATABASE <span class="keyword">ADD</span> STANDBY LOGFILE <span class="string">&#x27;/data/oracle/product/11.2.0/redolog/rdo01_dg1.log&#x27;</span> size <span class="number">512</span>M;</span><br><span class="line"><span class="keyword">ALTER</span> DATABASE <span class="keyword">ADD</span> STANDBY LOGFILE <span class="string">&#x27;/data/oracle/product/11.2.0/redolog/rdo02_dg1.log&#x27;</span> size <span class="number">512</span>M;</span><br><span class="line"><span class="keyword">ALTER</span> DATABASE <span class="keyword">ADD</span> STANDBY LOGFILE <span class="string">&#x27;/data/oracle/product/11.2.0/redolog/rdo03_dg1.log&#x27;</span> size <span class="number">512</span>M;</span><br></pre></td></tr></table></figure>
+<h3 id="2-开始同步"><a href="#2-开始同步" class="headerlink" title="2. 开始同步"></a>2. 开始同步</h3><h4 id="1）备库开始同步"><a href="#1）备库开始同步" class="headerlink" title="1）备库开始同步"></a>1）备库开始同步</h4><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 进入数据库</span></span><br><span class="line">sqlplus <span class="operator">/</span> <span class="keyword">as</span> sysdba</span><br><span class="line"><span class="comment">-- 查看实例状态是否mount模式</span></span><br><span class="line"><span class="keyword">select</span> instance_name,status <span class="keyword">from</span> v$instance;</span><br></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 主/备查看日志队列是否正常，正常情况下主/备日志队列号是一致的</span></span><br><span class="line"><span class="keyword">SELECT</span> SEQUENCE#, REGISTRAR, FIRST_TIME, NEXT_TIME, APPLIED <span class="keyword">FROM</span> V$ARCHIVED_LOG <span class="keyword">ORDER</span> <span class="keyword">BY</span> SEQUENCE#;</span><br><span class="line"></span><br><span class="line"><span class="keyword">SELECT</span> SEQUENCE#,APPLIED <span class="keyword">FROM</span> V$ARCHIVED_LOG <span class="keyword">ORDER</span> <span class="keyword">BY</span> SEQUENCE#;</span><br></pre></td></tr></table></figure>
+<p>日志队列查询结果：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">SEQUENCE# REGISTR FIRST_TIM NEXT_TIME APPLIED</span><br><span class="line">---------- ------- --------- --------- ---------</span><br><span class="line">	22 LGWR    14-OCT-21 14-OCT-21 NO</span><br><span class="line">	22 LGWR    14-OCT-21 14-OCT-21 YES</span><br><span class="line">	23 LGWR    14-OCT-21 15-OCT-21 NO</span><br><span class="line">	23 LGWR    14-OCT-21 15-OCT-21 YES</span><br><span class="line">	24 ARCH    15-OCT-21 15-OCT-21 NO</span><br><span class="line">	24 ARCH    15-OCT-21 15-OCT-21 YES</span><br><span class="line">	25 LGWR    15-OCT-21 15-OCT-21 NO</span><br><span class="line">	25 LGWR    15-OCT-21 15-OCT-21 YES</span><br></pre></td></tr></table></figure>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 开启实时同步</span></span><br><span class="line"><span class="keyword">alter</span> database recover managed standby database <span class="keyword">using</span> <span class="keyword">current</span> logfile <span class="keyword">disconnect</span> <span class="keyword">from</span> session;</span><br><span class="line"><span class="comment">-- 取消同步</span></span><br><span class="line"><span class="keyword">alter</span> database recover managed standby database cancel;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>开启后稍等片刻再次查证</li>
+</ul>
+<p>【查证方式一】</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT SEQUENCE#, REGISTRAR, FIRST_TIME, NEXT_TIME, APPLIED FROM V$ARCHIVED_LOG ORDER BY SEQUENCE#;</span><br></pre></td></tr></table></figure>
+<p>【查证方式二】</p>
+<p>直接在数据库主库新增，看备库是否同步</p>
+<h4 id="附录："><a href="#附录：" class="headerlink" title="附录："></a>附录：</h4><h4 id="1-可能用到的命令"><a href="#1-可能用到的命令" class="headerlink" title="1.可能用到的命令"></a>1.可能用到的命令</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;</span><span class="bash"> recover managed standby database using current logfile disconnect from session;</span></span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> startup force mount pfile=<span class="string">&#x27;/data/oracle/product/11.2.0/dbs/initorcl.ora&#x27;</span>;</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> redo <span class="built_in">log</span></span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> select group<span class="comment">#,member from v$logfile;</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 查找service_name</span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> show parameter service;</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 开启数据库</span></span><br><span class="line">alter database open;</span><br><span class="line"><span class="meta">#</span><span class="bash"> </span></span><br><span class="line"> select error from v$archive_dest where target=&#x27;STANDBY&#x27;;</span><br><span class="line"><span class="meta">#</span><span class="bash"> 修改db启动项和停止项命令，然后修改ORACLE_HOME_LISTNER=<span class="variable">$1</span>为ORACLE_HOME_LISTNER=<span class="variable">$ORACLE_HOME</span></span></span><br><span class="line">vim $ORACLE_HOME/bin/dbstart</span><br><span class="line">vim $ORACLE_HOME/bin/dbshut</span><br></pre></td></tr></table></figure>
+
+<h4 id="2-常见问题"><a href="#2-常见问题" class="headerlink" title="2.常见问题"></a>2.常见问题</h4><p>1）日志不同步</p>
+<ul>
+<li>主库查验</li>
+</ul>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- sql 命令行执行</span></span><br><span class="line"><span class="keyword">show</span> <span class="keyword">parameter</span> log_archive_dest_state_2;</span><br><span class="line"><span class="comment">-- 处理方式</span></span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">SYSTEM</span> <span class="keyword">SET</span> LOG_ARCHIVE_DEST_STATE_2<span class="operator">=</span><span class="string">&#x27;ENABLE&#x27;</span>; </span><br></pre></td></tr></table></figure>
+
+<p>正常情况：value为enable</p>
+<p>NAME                     TYPE     VALUE</p>
+<hr>
+<p>log_archive_dest_state_2         string     enable<br>log_archive_dest_state_20         string     enable<br>log_archive_dest_state_21         string     enable<br>log_archive_dest_state_22         string     enable<br>log_archive_dest_state_23         string     enable<br>log_archive_dest_state_24         string     enable<br>log_archive_dest_state_25         string     enable<br>log_archive_dest_state_26         string     enable<br>log_archive_dest_state_27         string     enable<br>log_archive_dest_state_28         string     enable<br>log_archive_dest_state_29         string     enable</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- sql 命令行执行</span></span><br><span class="line"><span class="keyword">show</span> <span class="keyword">parameter</span> log_archive_dest_2</span><br><span class="line"><span class="comment">-- 处理方式</span></span><br><span class="line"><span class="keyword">ALTER</span> <span class="keyword">SYSTEM</span> <span class="keyword">SET</span> LOG_ARCHIVE_DEST_2<span class="operator">=</span><span class="string">&#x27;SERVICE=orcl1  ASYNC VALID_FOR=(ONLINE_LOGFILES,PRIMARY_ROLE) DB_UNIQUE_NAME=orcl_dg02&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<p>异常情况：value为空</p>
+<p>NAME                     TYPE     VALUE</p>
+<hr>
+<p>log_archive_dest_2             string<br>log_archive_dest_20             string<br>log_archive_dest_21             string<br>log_archive_dest_22             string<br>log_archive_dest_23             string<br>log_archive_dest_24             string<br>log_archive_dest_25             string<br>log_archive_dest_26             string<br>log_archive_dest_27             string<br>log_archive_dest_28             string<br>log_archive_dest_29             string</p>
+
+        <p class="suffix-end">__END__</p>
+        <div class="suffix-box">
+            <div class="suffix-box-left">
+                <img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/%E5%A4%B4%E5%83%8F.jpg" alt="Jingwei Blog">
+            </div>
+            <div class="suffix-box-right" style="margin-top: 19px;">
+                <span class="suffix-box-title">文章作者</span>：Jingwei Blog
+                <br>
+                <span class="suffix-box-title">文章出处</span>：<a href="/2021/10/20/Oracle%20DG%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E9%85%8D%E7%BD%AE/" target="_blank">Oracle DG主从同步配置</a>
+                <br>
+                <span class="suffix-box-title">作者签名</span>：生活，即无数个平凡和偶尔的惊喜，惊喜来时，如星坠银河，激起朵朵涟漪.
+                <br>
+                <!-- <span class="suffix-box-title">关于主题</span>：<a href="https://github.com/first19326/Hexo-LiveForCode" target="_blank">Hexo - Live For Code</a>
+                <br>
+                <span class="suffix-box-title">版权声明</span>：文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" title="BY-NC-SA" target="_blank">BY-NC-SA</a> 许可协议，转载请注明出处 -->
+                <br>
+            </div>
+            <div style="clear: both;"></div>
+        </div>
+    </div>
+    <div class="article-footer">
+        
+            <div class="category">
+                分类：
+                
+                    <a href="/categorie/Oracle/">Oracle</a>
+                
+            </div>
+        
+        
+            <div class="tag">
+                标签：
+                
+                    <a href="/tag/%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5/">主从同步</a>
+                
+            </div>
+        
+        <div class="article-prev-next">
+            
+                <a href="/2021/10/20/Oracle%20DG%E4%B8%BB%E5%A4%87%E5%88%87%E6%8D%A2/" class="prev-prefix">« </a> 上一篇：    <a href="/2021/10/20/Oracle%20DG%E4%B8%BB%E5%A4%87%E5%88%87%E6%8D%A2/" title="发布于 2021-10-20 02:20">Oracle DG主备切换</a>
+                <br>
+            
+            
+                <a href="/2021/10/20/Linux%E5%AE%89%E8%A3%85Oracle%2011G/" class="next-prefix">» </a> 下一篇：    <a href="/2021/10/20/Linux%E5%AE%89%E8%A3%85Oracle%2011G/" title="发布于 2021-10-20 02:17">Linux安装Oracle 11G</a>
+            
+        </div>
+    </div>
+    
+    <div class="article-comments">
+        <div class="comments-title">
+            评论列表
+        </div>
+        <div class="comments-content">
+        </div>
+    </div>
+
+</div>
+
+    </div>
+</div>
+    <div id="footer">
+    <div style="color:black"><a target="_blank" rel="noopener" href="https://beian.miit.gov.cn">陕ICP备2021012616号</a></div>
+</div>
+
+    <div id="sidebar">
+    <div class="menu-wrap" style="display:none;">
+        <nav class="menu">
+            <div class="menu-introduce"> 
+                <div class="introduce-avatar"></div> 
+                <div class="introduce-info"> 
+                    <div class="introduce-user"><span></span></div>        
+                </div> 
+            </div> 
+            <div class="menu-list">
+                <ul></ul> 
+            </div> 
+            <div class="menu-link"></div> 
+        </nav>
+        <button class="menu-button-close"></button>
+        <div class="morph-shape" id="morph-shape" data-morph-open="M-7.312,0H15c0,0,66,113.339,66,399.5C81,664.006,15,800,15,800H-7.312V0z;M-7.312,0H100c0,0,0,113.839,0,400c0,264.506,0,400,0,400H-7.312V0z">
+            <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 100 800" preserveAspectRatio="none">
+                <path d="M-7.312,0H0c0,0,0,113.839,0,400c0,264.506,0,400,0,400h-7.312V0z"/>
+            </svg>
+        </div>
+    </div>
+    <button class="menu-button-open">MENU</button>
+    <div class="menu-cover"></div>
+</div>
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/search.css">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/iscroll.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/instantsearch.min.js"></script>
+<div class="search-window">
+    <div class="search-content">
+        <div class="search-content-icon">
+            <i class="iconfont icon-search"></i>
+        </div>
+        <div id="search-input" class="search-input"></div>
+    </div>
+
+    <div class="search-scroll">
+        <div class="search-result">
+            <div id="search-stats" class="search-stats"></div>
+            <div id="search-hits"></div>
+            <div id="search-pagination" class="search-pagination"></div>
+        </div>
+    </div>
+
+    <span class="search-close-icon">
+        <i class="iconfont icon-close"></i>
+    </span>
+</div>
+    <div id="tools">
+    <div class="progressbar-top"></div>
+
+    
+        <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/APlayer.css">
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/APlayer.min.js"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/Meting.min.js"></script>
+        <meting-js id="3778678" lrcshow="false" server="netease" type="playlist" fixed="true" autoplay="false" loop="all" order="random" preload="auto" volume="0.67" mutex="true"></meting-js>
+    
+    
+    <div class="wrap-right"></div>
+    <div class="loading"></div>
+</div>
+    <script>
+    window.config = {
+        GitHubUserName     : 'first19326',
+        GitHubRepositories : 'Hexo-LiveForCode',
+
+        BlogUser      : 'Jingwei Blog',
+        BlogAvatar    : 'https://jingwei-blog.oss-cn-beijing.aliyuncs.com/%E5%A4%B4%E5%83%8F.jpg',
+        BlogStartDate : '2020-01-01',
+
+        WebsiteTitleBlur         : 'wujingwei的博客',
+        WebsiteTitleBlurTimeOut  : 500,
+        WebsiteTitleFocus        : '欢迎回来!',
+        WebsiteTitleFocusTimeOut : 1000,
+        WebsiteFavicon           : 'https://jingwei-blog.oss-cn-beijing.aliyuncs.com/favicon.ico',
+
+        ProgressBar: {
+            id       : 'topProgressBar',
+            color    : '#77B6FF',
+            height   : '2px',
+            duration : 0.2
+        },
+
+        Loading: {
+            rebound: {
+                tension  : 16,
+                friction : 5
+            },
+            spinner: {
+                id     : 'spinner',
+                radius : 90,
+                sides  : 3,
+                depth  : 4,
+                colors : {
+                    background : '#F0F0F0',
+                    stroke     : '#272633',
+                    base       : '',
+                    child      : '#272633'
+                },
+                alwaysForward : true,
+                restAt        : 0.5,
+                renderBase    : false
+            }
+        },
+
+        HomeHeaderAnimationRendered : true,
+        HomeHeaderAnimation         : {
+            radius      : 15,
+            density     : 0.2,
+            color       : 'rgba(255, 255, 255, .2)',
+            clearOffset : 0.3
+        },
+
+        ArticleHeaderAnimationRendered : false,
+        ArticleHeaderAnimation         : {
+            triW                  : 14,
+            triH                  : 20,
+            neighbours            : [
+                
+                    'side',
+                
+                    'top',
+                
+                    'bottom',
+                
+            ],
+            speedTrailAppear      : 0.1,
+            speedTrailDisappear   : 0.1,
+            speedTriOpen          : 1,
+            trailMaxLength        : 30,
+            trailIntervalCreation : 100,
+            delayBeforeDisappear  : 2,
+            colors                : [
+                
+                    '#96EDA6',
+                
+                    '#5BC6A9',
+                
+                    '#38668C',
+                
+                    '#374D84',
+                
+                    '#BED5CB',
+                
+                    '#62ADC6',
+                
+                    '#8EE5DE',
+                
+                    '#304E7B',
+                
+            ]
+        },
+
+        BackAnimationRendered          : true,
+        IEBrowserBackAnimationRendered : false,
+        BackAnimation                  : {
+            colorSaturation  : '60%',
+            colorBrightness  : '50%',
+            colorAlpha       : 0.5,
+            colorCycleSpeed  : 5,
+            verticalPosition : 'random',
+            horizontalSpeed  : 200,
+            ribbonCount      : 3,
+            strokeSize       : 0,
+            parallaxAmount   : -0.2,
+            animateSections  : true
+        },
+
+        HomeHeaderImage : [
+            
+                'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/image/header/home.jpg',
+            
+                'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/image/header/home.jpeg',
+            
+        ],
+        HomeBannerText  : '',
+
+        ArticleHeaderImage : [
+            
+                'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/image/header/article.jpg',
+            
+                'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/image/header/home.jpeg',
+            
+        ],
+
+        OtherBannerText : '',
+
+        MenuList : [
+            
+                {
+                    name   : '首页',
+                    href   : '/',    
+                    target : '',
+                    class  : ''
+                },
+            
+                {
+                    name   : '标签',
+                    href   : '/tag',    
+                    target : '',
+                    class  : ''
+                },
+            
+                {
+                    name   : '分类',
+                    href   : '/category',    
+                    target : '',
+                    class  : ''
+                },
+            
+                {
+                    name   : '归档',
+                    href   : '/archive',    
+                    target : '',
+                    class  : ''
+                },
+            
+                {
+                    name   : '赞赏',
+                    href   : '/donate',    
+                    target : '',
+                    class  : ''
+                },
+            
+                {
+                    name   : '关于',
+                    href   : '/about',    
+                    target : '',
+                    class  : ''
+                },
+            
+                {
+                    name   : '搜索',
+                    href   : '',    
+                    target : '',
+                    class  : 'search'
+                },
+            
+                {
+                    name   : '留言板',
+                    href   : '/comment',    
+                    target : '',
+                    class  : ''
+                },
+            
+        ],
+        MenuLink : [
+            
+                
+                    {
+                        icon : 'icon-weibo', 
+                        url  : ''
+                    },
+                
+                    {
+                        icon : 'icon-wechat', 
+                        url  : ''
+                    },
+                
+                    {
+                        icon : 'icon-qq', 
+                        url  : ''
+                    },
+                
+                    {
+                        icon : 'icon-github', 
+                        url  : 'https://github.com/hello-jingwei/hello-jingwei.github.io.git'
+                    },
+                
+            
+        ],
+
+        FooterStyle : 2,
+        BottomText  : {
+            icon    : '',
+            left    : '长风破浪会有时',
+            right   : '直挂云帆济沧海'
+        },
+        ThemeInfo   : false,
+
+        ConsoleList : [
+            
+        ],
+
+        FontIconExtend : '',
+
+        Donate : {
+            paypal  : '',
+            bitcoin : '',
+            alipay  : 'https://jingwei-blog.oss-cn-beijing.aliyuncs.com/alipay.png',
+            wechat  : 'https://jingwei-blog.oss-cn-beijing.aliyuncs.com/wxpay.jpg'
+        },
+
+        Code : {
+            style : 'normal'
+        },  
+
+        Search : {
+            applicationID : '75JMBZA03H',
+            apiKey        : '4895810c206680330bcb904263a34983',
+            indexName     : 'blog',
+            hits          : {
+                page : 10
+            },
+            labels        : {
+                placeholder : '搜索',
+                empty       : '未发现与 「${query}」 相关的内容',
+                stats       : '${hits} 条相关条目，使用了 ${time} 毫秒',
+            }
+        }, 
+
+        Valine : {
+            switch         : true,
+            el             : '.comments-content',
+            appId          : 'HCHJvnDoToy4qwgPrvxlWGLH-gzGzoHsz',
+            appKey         : 'fUcvLzMtusBIkcp0tw2O0RxV',
+            placeholder    : '你是我一生只会遇见一次的惊喜...',
+            avatar         : 'mm',
+            meta           : 'nick,mail,link',
+            requiredFields : 'nick,mail',
+            pageSize       : 5,
+            lang           : 'zh-cn',
+            visitor        : true,
+            enableQQ       : true
+        },
+
+        Tocbot : {
+            switch                : true,
+            tocSelector           : '.toc',
+            contentSelector       : '.article-body',
+            headingSelector       : 'h1, h2, h3, h4, h5',
+            headingsOffset        : 0,
+            scrollSmooth          : true,
+            scrollSmoothOffset    : -5,
+            positionFixedSelector : '.toc',
+            positionFixedClass    : 'toc-fixed',
+            fixedSidebarOffset    : '',
+        },
+
+        Require : {
+            baseUrl     : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/',
+            waitSeconds : 100
+        },
+
+        Music : {
+            type : 'Meting'
+        },
+        APlayer : {
+            container : '.aplayer',
+            fixed     : true,
+            autoplay  : false,
+            loop      : 'all',
+            order     : 'random',
+            preload   : 'auto',
+            volume    : 0.67,
+            mutex     : true,
+            lrcType   : 3,
+            audio     : [
+                
+                    {
+                        name   : 'aLIEz',
+                        artist : 'mizuki（瑞葵）',
+                        cover  : '/music/cover/aLIEz.jpg',
+                        url    : '/music/song/aLIEz.mp3',
+                        lrc    : '/music/lrc/aLIEz.lrc'
+                    },
+                
+                    {
+                        name   : 'Endless Tears',
+                        artist : 'CLIFF EDGE',
+                        cover  : '/music/cover/Endless Tears.jpg',
+                        url    : '/music/song/Endless Tears.mp3',
+                        lrc    : '/music/lrc/Endless Tears.lrc'
+                    },
+                
+                    {
+                        name   : 'Miracle',
+                        artist : 'Cascada',
+                        cover  : '/music/cover/Miracle.jpg',
+                        url    : '/music/song/Miracle.mp3',
+                        lrc    : '/music/lrc/Miracle.lrc'
+                    },
+                
+                    {
+                        name   : 'Roll The Dice',
+                        artist : '高珊',
+                        cover  : '/music/cover/Roll The Dice.jpg',
+                        url    : '/music/song/Roll The Dice.mp3',
+                        lrc    : '/music/lrc/Roll The Dice.lrc'
+                    },
+                
+                    {
+                        name   : 'See You Again',
+                        artist : 'Charlie Puth, Wiz Khalifa',
+                        cover  : '/music/cover/See You Again.jpg',
+                        url    : '/music/song/See You Again.mp3',
+                        lrc    : '/music/lrc/See You Again.lrc'
+                    },
+                
+                    {
+                        name   : 'Traveling Light',
+                        artist : 'Joel Hanson, Sara Groves',
+                        cover  : '/music/cover/Traveling Light.jpg',
+                        url    : '/music/song/Traveling Light.mp3',
+                        lrc    : '/music/lrc/Traveling Light.lrc'
+                    },
+                
+                    {
+                        name   : '痴心绝对',
+                        artist : '李圣杰',
+                        cover  : '/music/cover/痴心绝对.jpg',
+                        url    : '/music/song/痴心绝对.mp3',
+                        lrc    : '/music/lrc/痴心绝对.lrc'
+                    },
+                
+                    {
+                        name   : '好想大声说爱你',
+                        artist : 'BAAD（バード）',
+                        cover  : '/music/cover/好想大声说爱你.jpg',
+                        url    : '/music/song/好想大声说爱你.mp3',
+                        lrc    : '/music/lrc/好想大声说爱你.lrc'
+                    },
+                
+            ]
+        },
+        Meting : {
+            id       : '3778678', 
+            lrcshow  : false, 
+            server   : 'netease', 
+            type     : 'playlist', 
+            fixed    : true, 
+            autoplay : false, 
+            loop     : 'all', 
+            order    : 'random', 
+            preload  : 'auto', 
+            volume   : 0.67, 
+            mutex    : true
+        },
+
+        LazyLoad : {
+            default : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/image/website/lazyload.svg'
+        },
+  
+        Style : {
+            aplayer          : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/APlayer.css',
+            archive          : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/archive.css',
+            donate           : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/donate.css',
+            fancybox         : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/jquery.fancybox.css',
+            footer           : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/footer.css',
+            iconfont         : 'https://at.alicdn.com/t/font_1546312_l3yohatebw.css',
+            index            : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/index.css',
+            menuBubble       : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/menu-bubble.css',
+            page             : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/page.css',
+            post             : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/post.css',
+            search           : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/search.css',
+            tocbot           : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/tocbot.css',
+            normal           : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/normal.css',
+            night            : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/night.css',
+            clipboard        : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/clipboard.css'
+        },
+
+        Script: {
+            aplayer          : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/APlayer.min.js',
+            config           : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/require.config.js',
+            index            : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/index.js',
+            instantSearch    : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/instantsearch.min.js',
+            jQuery           : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/jquery-3.4.1.min.js',
+            loading          : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/loading.js',
+            meting           : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/Meting.min.js',
+            iscroll          : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/iscroll.js',
+            require          : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/require.min.js'
+        },
+
+        Font: {
+            LongCang   : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/LongCang.css',
+            Monda      : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/Monda.css',
+            NotoSansSC : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/NotoSansSC.css',
+            Playball   : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/Playball.css',
+            PTMono     : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/PTMono.css',
+            RobotoSlab : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/RobotoSlab.css',
+            Rosario    : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/Rosario.css',
+            UbuntuMono : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/UbuntuMono.css'
+        },
+
+        Suffix : {
+            about : '生活，即无数个平凡和偶尔的惊喜，惊喜来时，如星坠银河，激起朵朵涟漪.'
+        },
+            
+        Theme : {
+            url  : 'https://github.com/first19326/Hexo-LiveForCode',
+            name : 'Hexo - Live For Code'
+        }  
+    };
+</script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/index.js"></script>
+</body>
+</html>

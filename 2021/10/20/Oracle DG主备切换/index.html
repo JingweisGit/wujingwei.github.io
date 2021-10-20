@@ -6,7 +6,7 @@
     <meta name="referrer" content="origin">
     <meta http-equiv="Cache-Control" content="no-transform">
     <meta http-equiv="Cache-Control" content="no-siteapp">
-    <title>标签</title>
+    <title>Oracle DG主备切换</title>
     <link rel="shortcut icon" href="#"/>
 
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/LongCang.css">
@@ -18,12 +18,13 @@
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/Rosario.css">
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/UbuntuMono.css">
 
-    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/page.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/post.css">
     
         <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/normal.css">
     
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/jquery-3.4.1.min.js"></script>
+
 <meta name="generator" content="Hexo 5.4.0"></head>
 <body>
     <a id="cover"></a>
@@ -31,10 +32,21 @@
     <div class="header">
         <div class="vertical">
             <div class="inner">
-                <h1 class="header-subtitle">标签</h1>
+                <h1 class="header-subtitle">Oracle DG主备切换</h1>
                 <div class="header-subinfo">
-                    <p class="article-info-text Chinese"></p>
-                    <p class="article-info-text English"></p>                  
+                    <p class="article-info-text">
+                        <span>
+                            <i class="iconfont icon-time"></i> 发表时间：2021-10-20
+                        </span>
+                        
+                            <span id="/2021/10/20/Oracle DG主备切换/" class="leancloud_visitors" data-flag-title="Oracle DG主备切换">
+                                <i class="iconfont icon-browse"></i> 阅读：<sapn class="leancloud-visitors-count"></span>
+                            </span>
+                        
+                        <span>
+                            <i class="iconfont icon-interactive"></i> 评论：<span class="valine-comment-count" data-xid="/2021/10/20/Oracle DG主备切换/"></span>
+                        </span>  
+                    </p>                 
                 </div>
             </div>
         </div>
@@ -43,13 +55,109 @@
 </div>
     <div id="container">
     <div id="content">
-        <div class="tags">
-    <div class="tags-title">
-        目前共计 10 个标签
+        <div id="article">
+    <div class="toc"></div>
+    <div class="article-body">
+        <p>环境信息</p>
+<blockquote>
+<p>系统：CentOS 7<br>Oracle版本：Oracle 11g R2(11.0.2.1.0)</p>
+<p>场景：主备，主库读写，备库读</p>
+</blockquote>
+<p>接上文，本部分主要介绍主备切换</p>
+<p>主备切换经历主库变备库，备库变主库两个主要阶段，以下三幅图顺序展示了这些变化</p>
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oracle-dg-sw-01.jpg"></p>
+<div align="center"><strong>图一</strong></div> 
+
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oracle-dg-sw-02.jpg"></p>
+<div align="center"><strong>图二</strong></div> 
+
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oracle-dg-sw-03.jpg"></p>
+<div align="center"><strong>图三</strong></div> 
+
+<h4 id="1-切换先决条件（务必确认完成）"><a href="#1-切换先决条件（务必确认完成）" class="headerlink" title="1. 切换先决条件（务必确认完成）"></a>1. 切换先决条件（务必确认完成）</h4><p>1）校验初始化参数，确保主备库中的参数LOG_ARCHIVE_DEST_n和ARCHIVE_DEST_STATE_n正常配置。<br>2）校验备库是否为日志开启模式，即上篇中讲到的ARCHIVELOG是否开启。<br>3）确保主库和备库的具有相匹配的temporary file。<br>4）消除应用重做时可能对将成为新主数据库的备用数据库有效的任何延迟。<br>具体做法（未切换前备库操作)</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"> <span class="comment">-- sql命令行</span></span><br><span class="line"><span class="keyword">COLUMN</span> NAME FORMAT A18</span><br><span class="line"><span class="keyword">COLUMN</span> <span class="keyword">VALUE</span> FORMAT A16</span><br><span class="line"><span class="keyword">COLUMN</span> TIME_COMPUTED FORMAT A24</span><br><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span> <span class="keyword">FROM</span> V$DATAGUARD_STATS;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oracle-dg-sw-04.jpg"></p>
+<p>通过上图发现没有延时<br>5）确保其他实例关闭，即在角色转换期间，其他实例不能在线，等当前实例切换完毕后再重新联机；具体操作时关闭当前库的监听即可。</p>
+<h4 id="2-开始切换"><a href="#2-开始切换" class="headerlink" title="2.开始切换"></a>2.开始切换</h4><p>​        切换分两个阶段进行。在第一阶段，现有的主数据库会过渡到备用角色。在第二阶段，备用数据库过渡到主要角色。</p>
+<h5 id="1）主库切换"><a href="#1）主库切换" class="headerlink" title="1）主库切换"></a>1）主库切换</h5><p>关闭当前库的监听</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsnrctl stop</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 1. 校验主库状态</span></span><br><span class="line"><span class="keyword">SELECT</span> SWITCHOVER_STATUS <span class="keyword">FROM</span> V$DATABASE;</span><br><span class="line"><span class="comment">-- 如果主库状态为 TO STANDBY表示可切换，如果不是则检查参数LOG_ARCHIVE_DEST_n配置是否正常。</span></span><br><span class="line"><span class="comment">-- 2. 开始切换</span></span><br><span class="line"><span class="keyword">ALTER</span> DATABASE <span class="keyword">COMMIT</span> <span class="keyword">TO</span> SWITCHOVER <span class="keyword">TO</span> PHYSICAL STANDBY;</span><br><span class="line"><span class="comment">-- 3. 重启主库</span></span><br><span class="line"> SHUTDOWN IMMEDIATE;</span><br><span class="line"> STARTUP MOUNT;</span><br><span class="line"> <span class="comment">--4. 校验是否切换成功,如果成功状态为 TO PRIMARY</span></span><br><span class="line"> <span class="keyword">SELECT</span> SWITCHOVER_STATUS <span class="keyword">FROM</span> V$DATABASE;</span><br></pre></td></tr></table></figure>
+
+<p>如果主库状态时 SESSIONS ACTIVE，则需要切换其状态</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> DATABASE <span class="keyword">COMMIT</span> <span class="keyword">TO</span> SWITCHOVER <span class="keyword">TO</span> PHYSICAL STANDBY <span class="keyword">WITH</span> SESSION SHUTDOWN;</span><br></pre></td></tr></table></figure>
+
+<h5 id="2）备库切换"><a href="#2）备库切换" class="headerlink" title="2）备库切换"></a>2）备库切换</h5><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 1. 校验主库状态</span></span><br><span class="line"><span class="keyword">SELECT</span> SWITCHOVER_STATUS <span class="keyword">FROM</span> V$DATABASE;</span><br><span class="line"><span class="comment">-- 2. 如果备库状态为TO PRIMARY,则可直接切换</span></span><br><span class="line"><span class="keyword">ALTER</span> DATABASE <span class="keyword">COMMIT</span> <span class="keyword">TO</span> SWITCHOVER <span class="keyword">TO</span> <span class="keyword">PRIMARY</span>;</span><br><span class="line"><span class="comment">-- 3. 重启主库</span></span><br><span class="line"> SHUTDOWN IMMEDIATE;</span><br><span class="line"> STARTUP;</span><br><span class="line"> <span class="comment">--4. 校验是否切换成功,如果成功状态为 TO PRIMARY</span></span><br><span class="line"> <span class="keyword">SELECT</span> SWITCHOVER_STATUS <span class="keyword">FROM</span> V$DATABASE;</span><br><span class="line"> <span class="comment">--5. 开启强制日志</span></span><br><span class="line"> <span class="keyword">ALTER</span> <span class="keyword">SYSTEM</span> SWITCH LOGFILE;</span><br></pre></td></tr></table></figure>
+
+<p>如果备库为SESSION ACTIVE，则需要使用SESSION SHUTDOWN方式关闭</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ALTER DATABASE COMMIT TO SWITCHOVER TO PRIMARY WITH SESSION SHUTDOWN;</span><br></pre></td></tr></table></figure>
+
+<h5 id="3）校验"><a href="#3）校验" class="headerlink" title="3）校验"></a>3）校验</h5><p>主备库切换过来以后，开启原主库监听</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsnrctl start</span><br></pre></td></tr></table></figure>
+
+<p>进入sql命令行</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 查看主库状态，如果为TO PRIMARY则正常</span></span><br><span class="line"><span class="keyword">SELECT</span> SWITCHOVER_STATUS <span class="keyword">FROM</span> V$DATABASE;</span><br><span class="line"><span class="comment">-- 开启数据库</span></span><br><span class="line"><span class="keyword">ALTER</span> DATABASE <span class="keyword">OPEN</span>;</span><br><span class="line"><span class="comment">-- 开启实时同步状态</span></span><br><span class="line"><span class="keyword">ALTER</span> DATABASE RECOVER MANAGED STANDBY DATABASE <span class="keyword">USING</span> <span class="keyword">CURRENT</span> LOGFILE <span class="keyword">DISCONNECT</span> <span class="keyword">FROM</span> SESSION;</span><br></pre></td></tr></table></figure>
+
+<p>等待片刻，查证数据是否开始同步，状态都是YES，则表示已经正常</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT SEQUENCE#, REGISTRAR, FIRST_TIME, NEXT_TIME, APPLIED FROM V$ARCHIVED_LOG ORDER BY SEQUENCE#;</span><br></pre></td></tr></table></figure>
+<h5 id="4）总结"><a href="#4）总结" class="headerlink" title="4）总结"></a>4）总结</h5><blockquote>
+<p>数据库宕机或其他非正常方式停止服务后，如短期内可以恢复，但是切换的时间代价大于恢复的时间代价，不建议做切换，具体情况需要根据实际情况做权衡。</p>
+</blockquote>
+
+        <p class="suffix-end">__END__</p>
+        <div class="suffix-box">
+            <div class="suffix-box-left">
+                <img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/%E5%A4%B4%E5%83%8F.jpg" alt="Jingwei Blog">
+            </div>
+            <div class="suffix-box-right" style="margin-top: 19px;">
+                <span class="suffix-box-title">文章作者</span>：Jingwei Blog
+                <br>
+                <span class="suffix-box-title">文章出处</span>：<a href="/2021/10/20/Oracle%20DG%E4%B8%BB%E5%A4%87%E5%88%87%E6%8D%A2/" target="_blank">Oracle DG主备切换</a>
+                <br>
+                <span class="suffix-box-title">作者签名</span>：生活，即无数个平凡和偶尔的惊喜，惊喜来时，如星坠银河，激起朵朵涟漪.
+                <br>
+                <!-- <span class="suffix-box-title">关于主题</span>：<a href="https://github.com/first19326/Hexo-LiveForCode" target="_blank">Hexo - Live For Code</a>
+                <br>
+                <span class="suffix-box-title">版权声明</span>：文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" title="BY-NC-SA" target="_blank">BY-NC-SA</a> 许可协议，转载请注明出处 -->
+                <br>
+            </div>
+            <div style="clear: both;"></div>
+        </div>
     </div>
-    <div class="tags-content">
-        <a href="/tag/Camunda/" style="font-size: 18.5px; color: #6f6f6f">Camunda</a> <a href="/tag/Security/" style="font-size: 12px; color: #ccc">Security</a> <a href="/tag/%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5/" style="font-size: 12px; color: #ccc">主从同步</a> <a href="/tag/%E4%B8%BB%E5%A4%87%E5%88%87%E6%8D%A2/" style="font-size: 12px; color: #ccc">主备切换</a> <a href="/tag/%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/" style="font-size: 25px; color: #111">容器技术</a> <a href="/tag/%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/" style="font-size: 18.5px; color: #6f6f6f">异常处理</a> <a href="/tag/%E6%8B%A6%E6%88%AA%E5%99%A8/" style="font-size: 12px; color: #ccc">拦截器</a> <a href="/tag/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E8%A3%85/" style="font-size: 12px; color: #ccc">数据库安装</a> <a href="/tag/%E7%AD%BE%E5%90%8D/" style="font-size: 12px; color: #ccc">签名</a> <a href="/tag/%E7%B4%A2%E5%BC%95/" style="font-size: 12px; color: #ccc">索引</a>
+    <div class="article-footer">
+        
+            <div class="category">
+                分类：
+                
+                    <a href="/categorie/Oracle/">Oracle</a>
+                
+            </div>
+        
+        
+            <div class="tag">
+                标签：
+                
+                    <a href="/tag/%E4%B8%BB%E5%A4%87%E5%88%87%E6%8D%A2/">主备切换</a>
+                
+            </div>
+        
+        <div class="article-prev-next">
+            
+            
+                <a href="/2021/10/20/Oracle%20DG%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E9%85%8D%E7%BD%AE/" class="next-prefix">» </a> 下一篇：    <a href="/2021/10/20/Oracle%20DG%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E9%85%8D%E7%BD%AE/" title="发布于 2021-10-20 02:19">Oracle DG主从同步配置</a>
+            
+        </div>
     </div>
+    
+    <div class="article-comments">
+        <div class="comments-title">
+            评论列表
+        </div>
+        <div class="comments-content">
+        </div>
+    </div>
+
 </div>
 
     </div>

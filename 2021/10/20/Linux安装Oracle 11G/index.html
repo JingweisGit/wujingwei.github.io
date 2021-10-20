@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, shrink-to-fit=no">
+    <meta name="referrer" content="origin">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <title>Linux安装Oracle 11G</title>
+    <link rel="shortcut icon" href="#"/>
+
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/LongCang.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/Monda.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/NotoSansSC.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/Playball.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/PTMono.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/RobotoSlab.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/Rosario.css">
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/UbuntuMono.css">
+
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/post.css">
+    
+        <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/normal.css">
+    
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/jquery-3.4.1.min.js"></script>
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+<body>
+    <a id="cover"></a>
+    <div id="header">
+    <div class="header">
+        <div class="vertical">
+            <div class="inner">
+                <h1 class="header-subtitle">Linux安装Oracle 11G</h1>
+                <div class="header-subinfo">
+                    <p class="article-info-text">
+                        <span>
+                            <i class="iconfont icon-time"></i> 发表时间：2021-10-20
+                        </span>
+                        
+                            <span id="/2021/10/20/Linux安装Oracle 11G/" class="leancloud_visitors" data-flag-title="Linux安装Oracle 11G">
+                                <i class="iconfont icon-browse"></i> 阅读：<sapn class="leancloud-visitors-count"></span>
+                            </span>
+                        
+                        <span>
+                            <i class="iconfont icon-interactive"></i> 评论：<span class="valine-comment-count" data-xid="/2021/10/20/Linux安装Oracle 11G/"></span>
+                        </span>  
+                    </p>                 
+                </div>
+            </div>
+        </div>
+        <canvas id="articleHeaderCanvas"></canvas>
+    </div>
+</div>
+    <div id="container">
+    <div id="content">
+        <div id="article">
+    <div class="toc"></div>
+    <div class="article-body">
+        <h4 id="1-下载安装包"><a href="#1-下载安装包" class="headerlink" title="1. 下载安装包"></a>1. 下载安装包</h4><p><a target="_blank" rel="noopener" href="https://www.oracle.com/cn/database/enterprise-edition/downloads/oracle-db11g-linux.html">https://www.oracle.com/cn/database/enterprise-edition/downloads/oracle-db11g-linux.html</a></p>
+<h4 id="2-解压"><a href="#2-解压" class="headerlink" title="2. 解压"></a>2. 解压</h4><ul>
+<li><p>将两个压缩包解压到同一个文件夹下</p>
+</li>
+<li><p>解压命令：</p>
+</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">unzip -d 目标文件夹 当前文件</span><br></pre></td></tr></table></figure>
+
+<h4 id="3-准备工作"><a href="#3-准备工作" class="headerlink" title="3. 准备工作"></a>3. 准备工作</h4><h5 id="3-1-关闭SELINUX"><a href="#3-1-关闭SELINUX" class="headerlink" title="3.1. 关闭SELINUX"></a>3.1. 关闭SELINUX</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查看selinux状态</span></span><br><span class="line">getenforce</span><br><span class="line"><span class="meta">#</span><span class="bash"> 设置为关闭状态</span></span><br><span class="line">setenforce 0</span><br><span class="line"><span class="meta">#</span><span class="bash"> 如需永久关闭，vi /etc/selinux/config</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 然后将SELINUX=enforcing改为SELINUX=disabled</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="3-2-关闭防火墙"><a href="#3-2-关闭防火墙" class="headerlink" title="3.2. 关闭防火墙"></a>3.2. 关闭防火墙</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查看状态</span></span><br><span class="line">systemctl status firewalld.service</span><br><span class="line"><span class="meta">#</span><span class="bash"> 关闭防火墙</span></span><br><span class="line">systemctl stop firewalld.service</span><br></pre></td></tr></table></figure>
+
+<h5 id="3-3-安装Oracle依赖"><a href="#3-3-安装Oracle依赖" class="headerlink" title="3.3. 安装Oracle依赖"></a>3.3. 安装Oracle依赖</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install gcc make binutils gcc-c++ compat-libstdc++-33elfutils-libelf-devel elfutils-libelf-devel-static ksh libaio libaio-develnumactl-devel sysstat unixODBC unixODBC-devel pcre-devel –y</span><br></pre></td></tr></table></figure>
+
+<h5 id="3-4-添加安装用户和用户组"><a href="#3-4-添加安装用户和用户组" class="headerlink" title="3.4. 添加安装用户和用户组"></a>3.4. 添加安装用户和用户组</h5><p>依次执行以下命令</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&gt;</span><span class="bash"> groupadd oinstall</span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> groupadd dba</span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> useradd -g oinstall -G dba oracle</span></span><br><span class="line"><span class="meta">&gt;</span><span class="bash"> passwd oracle</span></span><br></pre></td></tr></table></figure>
+
+<p>输入密码时可能会弹出提示，无需理会，二次确认密码即可</p>
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oralce-insatll-1.png"></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 查看设置</span></span><br><span class="line">id oracle</span><br></pre></td></tr></table></figure>
+<h5 id="3-4-修改内核参数配置文件"><a href="#3-4-修改内核参数配置文件" class="headerlink" title="3.4. 修改内核参数配置文件"></a>3.4. 修改内核参数配置文件</h5><ul>
+<li>编辑sysctl.conf</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/sysctl.conf</span><br></pre></td></tr></table></figure>
+<p>在末尾添加以下内容</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">fs.aio-max-nr = 1048576</span><br><span class="line">fs.file-max = 6815744</span><br><span class="line">kernel.shmall = 2097152</span><br><span class="line">kernel.shmmax = 1073741824</span><br><span class="line">kernel.shmmni = 4096</span><br><span class="line">kernel.sem = 250 32000 100 128</span><br><span class="line">net.ipv4.ip_local_port_range = 9000 65500</span><br><span class="line">net.core.rmem_default = 262144</span><br><span class="line">net.core.rmem_max = 4194304</span><br><span class="line">net.core.wmem_default = 262144</span><br><span class="line">net.core.wmem_max = 1048576</span><br></pre></td></tr></table></figure>
+<ul>
+<li>查看是否成功写进/etc/sysctl.conf文件中</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> kernel.shmmax = 1073741824为本机物理内存（2G）的一半，单位为byte</span></span><br><span class="line">sysctl -p</span><br></pre></td></tr></table></figure>
+<h5 id="3-4-修改内核参数配置文件-1"><a href="#3-4-修改内核参数配置文件-1" class="headerlink" title="3.4. 修改内核参数配置文件"></a>3.4. 修改内核参数配置文件</h5><ul>
+<li>修改/etc/security/limits.conf文件</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/security/limits.conf</span><br></pre></td></tr></table></figure>
+<p>​    在末尾添加以下内容</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">oracle           soft    nproc           2047</span><br><span class="line">oracle           hard    nproc           16384</span><br><span class="line">oracle           soft    nofile          1024</span><br><span class="line">oracle           hard    nofile         65536</span><br><span class="line">oracle           soft    stack           10240 </span><br></pre></td></tr></table></figure>
+<ul>
+<li>修改/etc/pam.d/login文件</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/pam.d/login</span><br></pre></td></tr></table></figure>
+<p>在末尾添加以下内容</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">session required  /lib64/security/pam_limits.so</span><br><span class="line">session required   pam_limits.so </span><br></pre></td></tr></table></figure>
+<ul>
+<li>修改/etc/profile文件</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/profile</span><br></pre></td></tr></table></figure>
+<p>在末尾添加以下内容</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">oracle配置</span></span><br><span class="line">if [ $USER = &quot;oracle&quot; ]; then</span><br><span class="line">  if [ $SHELL = &quot;/bin/ksh&quot; ]; then</span><br><span class="line">      ulimit -p 16384</span><br><span class="line">      ulimit -n 65536</span><br><span class="line">  else</span><br><span class="line">      ulimit -u 16384 -n 65536</span><br><span class="line">  fi</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
+<p>source一下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">source /etc/profile</span><br></pre></td></tr></table></figure>
+
+<h5 id="3-5-创建安装目录和设置文件权限"><a href="#3-5-创建安装目录和设置文件权限" class="headerlink" title="3.5. 创建安装目录和设置文件权限"></a>3.5. 创建安装目录和设置文件权限</h5><p>依次输入以下命令</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 文件夹名称需和后面一致(重点)</span></span><br><span class="line">mkdir -p /data/oracle/product/11.2.0</span><br><span class="line">mkdir /data/oracle/oradata</span><br><span class="line">mkdir /data/oracle/inventory</span><br><span class="line">mkdir /data/oracle/fast_recovery_area</span><br><span class="line">chown -R oracle:oinstall /data/oracle</span><br><span class="line">chmod -R 775 /data/oracle</span><br></pre></td></tr></table></figure>
+<h5 id="3-6-设置oracle用户环境变量"><a href="#3-6-设置oracle用户环境变量" class="headerlink" title="3.6. 设置oracle用户环境变量"></a>3.6. 设置oracle用户环境变量</h5><ul>
+<li>首先切换到oracle用户下</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 切换下去在home目录下</span></span><br><span class="line">su -l oracle</span><br></pre></td></tr></table></figure>
+<ul>
+<li>修改profile文件</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim .bash_profile</span><br></pre></td></tr></table></figure>
+
+<p>  在末尾添加如下内容</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ORACLE_BASE=/data/oracle</span><br><span class="line"><span class="meta">#</span><span class="bash"> 文件夹地址与前面data地址一致11.2.0</span></span><br><span class="line">ORACLE_HOME=$ORACLE_BASE/product/11.2.0</span><br><span class="line">ORACLE_SID=orcl</span><br><span class="line">PATH=$PATH:$ORACLE_HOME/bin</span><br><span class="line">export ORACLE_BASE ORACLE_HOME ORACLE_SID PATH</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>编辑完source一下</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">source .bash_profile</span><br></pre></td></tr></table></figure>
+<h5 id="3-7-编辑静默安装响应文件"><a href="#3-7-编辑静默安装响应文件" class="headerlink" title="3.7. 编辑静默安装响应文件"></a>3.7. 编辑静默安装响应文件</h5><ul>
+<li>将解压后的response文件夹复制到当前目录（/home/oracle实际为准）</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cp -R response-path(实际路径为准) .</span><br></pre></td></tr></table></figure>
+<ul>
+<li>进入当前response目录，编辑配置项</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cd response</span><br><span class="line"></span><br><span class="line">vim db_install.rsp</span><br></pre></td></tr></table></figure>
+
+<p>末尾粘贴如下脚本</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">oracle.install.option=INSTALL_DB_SWONLY</span><br><span class="line">ORACLE_HOSTNAME=CentOS</span><br><span class="line">UNIX_GROUP_NAME=oinstall</span><br><span class="line">INVENTORY_LOCATION=/data/oracle/inventory</span><br><span class="line">SELECTED_LANGUAGES=en,zh_CN</span><br><span class="line"><span class="meta">#</span><span class="bash"> 文件夹地址与前面data地址一致11.2.0</span></span><br><span class="line">ORACLE_HOME=/data/oracle/product/11.2.0</span><br><span class="line">ORACLE_BASE=/data/oracle</span><br><span class="line">oracle.install.db.InstallEdition=EE</span><br><span class="line">oracle.install.db.DBA_GROUP=dba</span><br><span class="line">oracle.install.db.OPER_GROUP=dba</span><br><span class="line">DECLINE_SECURITY_UPDATES=true</span><br></pre></td></tr></table></figure>
+<h4 id="4-安装"><a href="#4-安装" class="headerlink" title="4. 安装"></a>4. 安装</h4><h5 id="4-1-安装"><a href="#4-1-安装" class="headerlink" title="4.1 安装"></a>4.1 安装</h5><ul>
+<li>cd进入解压后的database目录下（不切换，仍为oracle用户）</li>
+<li>执行安装命令</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./runInstaller -silent -responseFile /home/oracle/response/db_install.rsp -ignorePrereq</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oralce-insatll-2.jpg"></p>
+<ul>
+<li>安装完后执行exit命令退出oracle用户，进入root用户，依次执行命令</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sh /data/oracle/inventory/orainstRoot.sh</span><br></pre></td></tr></table></figure>
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oralce-insatll-3.jpg"></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sh /data/oracle/product/11.2.0/root.sh</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oralce-insatll-4.jpg"></p>
+<h5 id="4-2-监听配置"><a href="#4-2-监听配置" class="headerlink" title="4.2 监听配置"></a>4.2 监听配置</h5><ul>
+<li>重新进入oracle用户</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">su -l oracle</span><br></pre></td></tr></table></figure>
+<ul>
+<li>执行以下命令</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netca /silent /responseFile /home/oracle/response/netca.rsp</span><br></pre></td></tr></table></figure>
+<ul>
+<li>查看是否监听</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">netstat -tnulp|grep 1521</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oralce-insatll-6.jpg"></p>
+<h5 id="4-3-创建实例"><a href="#4-3-创建实例" class="headerlink" title="4.3 创建实例"></a>4.3 创建实例</h5><ul>
+<li>修改配置文件</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /home/oracle/response/dbca.rsp</span><br></pre></td></tr></table></figure>
+<p>修改以下相关数据</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">[GENERAL]</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> oracle版本，不能更改</span></span><br><span class="line">RESPONSEFILE_VERSION = &quot;11.2.0&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Type of operation</span></span><br><span class="line">OPERATION_TYPE = &quot;createDatabase&quot;</span><br><span class="line"></span><br><span class="line">[CREATEDATABASE]</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Global database name of the database</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 全局数据库的名字=SID+主机域名<span class="comment"># 第三方工具链接数据库的时候使用的service名称</span></span></span><br><span class="line">GDBNAME = &quot;orcl.test&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : System identifier (SID) of the database</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 对应的实例名字</span></span><br><span class="line">SID = &quot;orcl&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Name of the template</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 建库用的模板文件</span></span><br><span class="line">TEMPLATENAME = &quot;General_Purpose.dbc&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Password <span class="keyword">for</span> SYS user</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> SYS管理员密码</span></span><br><span class="line">SYSPASSWORD = &quot;123456&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Password <span class="keyword">for</span> SYSTEM user</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> SYSTEM管理员密码</span></span><br><span class="line">SYSTEMPASSWORD = &quot;123456&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Password <span class="keyword">for</span> SYSMAN user</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> SYSMAN管理员密码</span></span><br><span class="line">SYSMANPASSWORD = &quot;123456&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Password <span class="keyword">for</span> DBSNMP user</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> DBSNMP管理员密码</span></span><br><span class="line">DBSNMPPASSWORD = &quot;123456&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Location of the data file<span class="string">&#x27;s</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="string"> 数据文件存放目录</span></span></span><br><span class="line">DATAFILEDESTINATION =/data/oracle/oradata</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="string"> Description   : Location of the data file&#x27;</span>s</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 恢复数据存放目录</span></span><br><span class="line">RECOVERYAREADESTINATION=/data/oracle/fast_recovery_area</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : Character <span class="built_in">set</span> of the database</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> 字符集，重要!!! 建库后一般不能更改，所以建库前要确定清楚。</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> (CHARACTERSET = <span class="string">&quot;AL32UTF8&quot;</span> NATIONALCHARACTERSET= <span class="string">&quot;UTF8&quot;</span>)</span></span><br><span class="line">CHARACTERSET = &quot;UTF8&quot;</span><br><span class="line"><span class="meta"></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> Description   : total memory <span class="keyword">in</span> MB to allocate to Oracle</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> oracle内存1638MB,物理内存2G*80%</span></span><br><span class="line">TOTALMEMORY = &quot;1638&quot;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>进行静默配置</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dbca -silent -responseFile /home/oracle/response/dbca.rsp</span><br></pre></td></tr></table></figure>
+<p><img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/oralce-insatll-7.jpg"></p>
+<ul>
+<li>实例检查</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ps -ef | grep ora_ | grep -v grep</span><br></pre></td></tr></table></figure>
+<ul>
+<li>监听状态查看</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lsnrctl status</span><br></pre></td></tr></table></figure>
+<ul>
+<li>状态查看</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sqlplus / as sysdba</span><br><span class="line"><span class="meta">#</span><span class="bash"> SQl 查看</span></span><br><span class="line">select status from v$instance</span><br></pre></td></tr></table></figure>
+
+<h5 id="4-4-创建用户"><a href="#4-4-创建用户" class="headerlink" title="4.4 创建用户"></a>4.4 创建用户</h5><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- 创建用户</span></span><br><span class="line"><span class="keyword">CREATE</span>  <span class="keyword">USER</span> admin IDENTIFIED <span class="keyword">BY</span> admin123;</span><br><span class="line"><span class="comment">-- 授予新登陆的用户创建权限</span></span><br><span class="line"><span class="keyword">grant</span> <span class="keyword">create</span> session <span class="keyword">to</span> admin;</span><br><span class="line"><span class="comment">-- 授予dba权限</span></span><br><span class="line"><span class="keyword">grant</span> dba <span class="keyword">to</span> admin;</span><br><span class="line"><span class="comment">-- 连接测试</span></span><br><span class="line"><span class="keyword">connect</span> admin<span class="operator">/</span>admin123;</span><br></pre></td></tr></table></figure>
+        <p class="suffix-end">__END__</p>
+        <div class="suffix-box">
+            <div class="suffix-box-left">
+                <img src="https://jingwei-blog.oss-cn-beijing.aliyuncs.com/%E5%A4%B4%E5%83%8F.jpg" alt="Jingwei Blog">
+            </div>
+            <div class="suffix-box-right" style="margin-top: 19px;">
+                <span class="suffix-box-title">文章作者</span>：Jingwei Blog
+                <br>
+                <span class="suffix-box-title">文章出处</span>：<a href="/2021/10/20/Linux%E5%AE%89%E8%A3%85Oracle%2011G/" target="_blank">Linux安装Oracle 11G</a>
+                <br>
+                <span class="suffix-box-title">作者签名</span>：生活，即无数个平凡和偶尔的惊喜，惊喜来时，如星坠银河，激起朵朵涟漪.
+                <br>
+                <!-- <span class="suffix-box-title">关于主题</span>：<a href="https://github.com/first19326/Hexo-LiveForCode" target="_blank">Hexo - Live For Code</a>
+                <br>
+                <span class="suffix-box-title">版权声明</span>：文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" title="BY-NC-SA" target="_blank">BY-NC-SA</a> 许可协议，转载请注明出处 -->
+                <br>
+            </div>
+            <div style="clear: both;"></div>
+        </div>
+    </div>
+    <div class="article-footer">
+        
+            <div class="category">
+                分类：
+                
+                    <a href="/categorie/Oracle/">Oracle</a>
+                
+            </div>
+        
+        
+            <div class="tag">
+                标签：
+                
+                    <a href="/tag/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E8%A3%85/">数据库安装</a>
+                
+            </div>
+        
+        <div class="article-prev-next">
+            
+                <a href="/2021/10/20/Oracle%20DG%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E9%85%8D%E7%BD%AE/" class="prev-prefix">« </a> 上一篇：    <a href="/2021/10/20/Oracle%20DG%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5%E9%85%8D%E7%BD%AE/" title="发布于 2021-10-20 02:19">Oracle DG主从同步配置</a>
+                <br>
+            
+            
+                <a href="/2021/09/28/MySQL%E7%B4%A2%E5%BC%95%E5%9B%9E%E8%A1%A8/" class="next-prefix">» </a> 下一篇：    <a href="/2021/09/28/MySQL%E7%B4%A2%E5%BC%95%E5%9B%9E%E8%A1%A8/" title="发布于 2021-09-28 11:38">MySQL索引回表</a>
+            
+        </div>
+    </div>
+    
+    <div class="article-comments">
+        <div class="comments-title">
+            评论列表
+        </div>
+        <div class="comments-content">
+        </div>
+    </div>
+
+</div>
+
+    </div>
+</div>
+    <div id="footer">
+    <div style="color:black"><a target="_blank" rel="noopener" href="https://beian.miit.gov.cn">陕ICP备2021012616号</a></div>
+</div>
+
+    <div id="sidebar">
+    <div class="menu-wrap" style="display:none;">
+        <nav class="menu">
+            <div class="menu-introduce"> 
+                <div class="introduce-avatar"></div> 
+                <div class="introduce-info"> 
+                    <div class="introduce-user"><span></span></div>        
+                </div> 
+            </div> 
+            <div class="menu-list">
+                <ul></ul> 
+            </div> 
+            <div class="menu-link"></div> 
+        </nav>
+        <button class="menu-button-close"></button>
+        <div class="morph-shape" id="morph-shape" data-morph-open="M-7.312,0H15c0,0,66,113.339,66,399.5C81,664.006,15,800,15,800H-7.312V0z;M-7.312,0H100c0,0,0,113.839,0,400c0,264.506,0,400,0,400H-7.312V0z">
+            <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 100 800" preserveAspectRatio="none">
+                <path d="M-7.312,0H0c0,0,0,113.839,0,400c0,264.506,0,400,0,400h-7.312V0z"/>
+            </svg>
+        </div>
+    </div>
+    <button class="menu-button-open">MENU</button>
+    <div class="menu-cover"></div>
+</div>
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/search.css">
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/iscroll.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/instantsearch.min.js"></script>
+<div class="search-window">
+    <div class="search-content">
+        <div class="search-content-icon">
+            <i class="iconfont icon-search"></i>
+        </div>
+        <div id="search-input" class="search-input"></div>
+    </div>
+
+    <div class="search-scroll">
+        <div class="search-result">
+            <div id="search-stats" class="search-stats"></div>
+            <div id="search-hits"></div>
+            <div id="search-pagination" class="search-pagination"></div>
+        </div>
+    </div>
+
+    <span class="search-close-icon">
+        <i class="iconfont icon-close"></i>
+    </span>
+</div>
+    <div id="tools">
+    <div class="progressbar-top"></div>
+
+    
+        <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/APlayer.css">
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/APlayer.min.js"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/Meting.min.js"></script>
+        <meting-js id="3778678" lrcshow="false" server="netease" type="playlist" fixed="true" autoplay="false" loop="all" order="random" preload="auto" volume="0.67" mutex="true"></meting-js>
+    
+    
+    <div class="wrap-right"></div>
+    <div class="loading"></div>
+</div>
+    <script>
+    window.config = {
+        GitHubUserName     : 'first19326',
+        GitHubRepositories : 'Hexo-LiveForCode',
+
+        BlogUser      : 'Jingwei Blog',
+        BlogAvatar    : 'https://jingwei-blog.oss-cn-beijing.aliyuncs.com/%E5%A4%B4%E5%83%8F.jpg',
+        BlogStartDate : '2020-01-01',
+
+        WebsiteTitleBlur         : 'wujingwei的博客',
+        WebsiteTitleBlurTimeOut  : 500,
+        WebsiteTitleFocus        : '欢迎回来!',
+        WebsiteTitleFocusTimeOut : 1000,
+        WebsiteFavicon           : 'https://jingwei-blog.oss-cn-beijing.aliyuncs.com/favicon.ico',
+
+        ProgressBar: {
+            id       : 'topProgressBar',
+            color    : '#77B6FF',
+            height   : '2px',
+            duration : 0.2
+        },
+
+        Loading: {
+            rebound: {
+                tension  : 16,
+                friction : 5
+            },
+            spinner: {
+                id     : 'spinner',
+                radius : 90,
+                sides  : 3,
+                depth  : 4,
+                colors : {
+                    background : '#F0F0F0',
+                    stroke     : '#272633',
+                    base       : '',
+                    child      : '#272633'
+                },
+                alwaysForward : true,
+                restAt        : 0.5,
+                renderBase    : false
+            }
+        },
+
+        HomeHeaderAnimationRendered : true,
+        HomeHeaderAnimation         : {
+            radius      : 15,
+            density     : 0.2,
+            color       : 'rgba(255, 255, 255, .2)',
+            clearOffset : 0.3
+        },
+
+        ArticleHeaderAnimationRendered : false,
+        ArticleHeaderAnimation         : {
+            triW                  : 14,
+            triH                  : 20,
+            neighbours            : [
+                
+                    'side',
+                
+                    'top',
+                
+                    'bottom',
+                
+            ],
+            speedTrailAppear      : 0.1,
+            speedTrailDisappear   : 0.1,
+            speedTriOpen          : 1,
+            trailMaxLength        : 30,
+            trailIntervalCreation : 100,
+            delayBeforeDisappear  : 2,
+            colors                : [
+                
+                    '#96EDA6',
+                
+                    '#5BC6A9',
+                
+                    '#38668C',
+                
+                    '#374D84',
+                
+                    '#BED5CB',
+                
+                    '#62ADC6',
+                
+                    '#8EE5DE',
+                
+                    '#304E7B',
+                
+            ]
+        },
+
+        BackAnimationRendered          : true,
+        IEBrowserBackAnimationRendered : false,
+        BackAnimation                  : {
+            colorSaturation  : '60%',
+            colorBrightness  : '50%',
+            colorAlpha       : 0.5,
+            colorCycleSpeed  : 5,
+            verticalPosition : 'random',
+            horizontalSpeed  : 200,
+            ribbonCount      : 3,
+            strokeSize       : 0,
+            parallaxAmount   : -0.2,
+            animateSections  : true
+        },
+
+        HomeHeaderImage : [
+            
+                'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/image/header/home.jpg',
+            
+                'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/image/header/home.jpeg',
+            
+        ],
+        HomeBannerText  : '',
+
+        ArticleHeaderImage : [
+            
+                'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/image/header/article.jpg',
+            
+                'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/image/header/home.jpeg',
+            
+        ],
+
+        OtherBannerText : '',
+
+        MenuList : [
+            
+                {
+                    name   : '首页',
+                    href   : '/',    
+                    target : '',
+                    class  : ''
+                },
+            
+                {
+                    name   : '标签',
+                    href   : '/tag',    
+                    target : '',
+                    class  : ''
+                },
+            
+                {
+                    name   : '分类',
+                    href   : '/category',    
+                    target : '',
+                    class  : ''
+                },
+            
+                {
+                    name   : '归档',
+                    href   : '/archive',    
+                    target : '',
+                    class  : ''
+                },
+            
+                {
+                    name   : '赞赏',
+                    href   : '/donate',    
+                    target : '',
+                    class  : ''
+                },
+            
+                {
+                    name   : '关于',
+                    href   : '/about',    
+                    target : '',
+                    class  : ''
+                },
+            
+                {
+                    name   : '搜索',
+                    href   : '',    
+                    target : '',
+                    class  : 'search'
+                },
+            
+                {
+                    name   : '留言板',
+                    href   : '/comment',    
+                    target : '',
+                    class  : ''
+                },
+            
+        ],
+        MenuLink : [
+            
+                
+                    {
+                        icon : 'icon-weibo', 
+                        url  : ''
+                    },
+                
+                    {
+                        icon : 'icon-wechat', 
+                        url  : ''
+                    },
+                
+                    {
+                        icon : 'icon-qq', 
+                        url  : ''
+                    },
+                
+                    {
+                        icon : 'icon-github', 
+                        url  : 'https://github.com/hello-jingwei/hello-jingwei.github.io.git'
+                    },
+                
+            
+        ],
+
+        FooterStyle : 2,
+        BottomText  : {
+            icon    : '',
+            left    : '长风破浪会有时',
+            right   : '直挂云帆济沧海'
+        },
+        ThemeInfo   : false,
+
+        ConsoleList : [
+            
+        ],
+
+        FontIconExtend : '',
+
+        Donate : {
+            paypal  : '',
+            bitcoin : '',
+            alipay  : 'https://jingwei-blog.oss-cn-beijing.aliyuncs.com/alipay.png',
+            wechat  : 'https://jingwei-blog.oss-cn-beijing.aliyuncs.com/wxpay.jpg'
+        },
+
+        Code : {
+            style : 'normal'
+        },  
+
+        Search : {
+            applicationID : '75JMBZA03H',
+            apiKey        : '4895810c206680330bcb904263a34983',
+            indexName     : 'blog',
+            hits          : {
+                page : 10
+            },
+            labels        : {
+                placeholder : '搜索',
+                empty       : '未发现与 「${query}」 相关的内容',
+                stats       : '${hits} 条相关条目，使用了 ${time} 毫秒',
+            }
+        }, 
+
+        Valine : {
+            switch         : true,
+            el             : '.comments-content',
+            appId          : 'HCHJvnDoToy4qwgPrvxlWGLH-gzGzoHsz',
+            appKey         : 'fUcvLzMtusBIkcp0tw2O0RxV',
+            placeholder    : '你是我一生只会遇见一次的惊喜...',
+            avatar         : 'mm',
+            meta           : 'nick,mail,link',
+            requiredFields : 'nick,mail',
+            pageSize       : 5,
+            lang           : 'zh-cn',
+            visitor        : true,
+            enableQQ       : true
+        },
+
+        Tocbot : {
+            switch                : true,
+            tocSelector           : '.toc',
+            contentSelector       : '.article-body',
+            headingSelector       : 'h1, h2, h3, h4, h5',
+            headingsOffset        : 0,
+            scrollSmooth          : true,
+            scrollSmoothOffset    : -5,
+            positionFixedSelector : '.toc',
+            positionFixedClass    : 'toc-fixed',
+            fixedSidebarOffset    : '',
+        },
+
+        Require : {
+            baseUrl     : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/',
+            waitSeconds : 100
+        },
+
+        Music : {
+            type : 'Meting'
+        },
+        APlayer : {
+            container : '.aplayer',
+            fixed     : true,
+            autoplay  : false,
+            loop      : 'all',
+            order     : 'random',
+            preload   : 'auto',
+            volume    : 0.67,
+            mutex     : true,
+            lrcType   : 3,
+            audio     : [
+                
+                    {
+                        name   : 'aLIEz',
+                        artist : 'mizuki（瑞葵）',
+                        cover  : '/music/cover/aLIEz.jpg',
+                        url    : '/music/song/aLIEz.mp3',
+                        lrc    : '/music/lrc/aLIEz.lrc'
+                    },
+                
+                    {
+                        name   : 'Endless Tears',
+                        artist : 'CLIFF EDGE',
+                        cover  : '/music/cover/Endless Tears.jpg',
+                        url    : '/music/song/Endless Tears.mp3',
+                        lrc    : '/music/lrc/Endless Tears.lrc'
+                    },
+                
+                    {
+                        name   : 'Miracle',
+                        artist : 'Cascada',
+                        cover  : '/music/cover/Miracle.jpg',
+                        url    : '/music/song/Miracle.mp3',
+                        lrc    : '/music/lrc/Miracle.lrc'
+                    },
+                
+                    {
+                        name   : 'Roll The Dice',
+                        artist : '高珊',
+                        cover  : '/music/cover/Roll The Dice.jpg',
+                        url    : '/music/song/Roll The Dice.mp3',
+                        lrc    : '/music/lrc/Roll The Dice.lrc'
+                    },
+                
+                    {
+                        name   : 'See You Again',
+                        artist : 'Charlie Puth, Wiz Khalifa',
+                        cover  : '/music/cover/See You Again.jpg',
+                        url    : '/music/song/See You Again.mp3',
+                        lrc    : '/music/lrc/See You Again.lrc'
+                    },
+                
+                    {
+                        name   : 'Traveling Light',
+                        artist : 'Joel Hanson, Sara Groves',
+                        cover  : '/music/cover/Traveling Light.jpg',
+                        url    : '/music/song/Traveling Light.mp3',
+                        lrc    : '/music/lrc/Traveling Light.lrc'
+                    },
+                
+                    {
+                        name   : '痴心绝对',
+                        artist : '李圣杰',
+                        cover  : '/music/cover/痴心绝对.jpg',
+                        url    : '/music/song/痴心绝对.mp3',
+                        lrc    : '/music/lrc/痴心绝对.lrc'
+                    },
+                
+                    {
+                        name   : '好想大声说爱你',
+                        artist : 'BAAD（バード）',
+                        cover  : '/music/cover/好想大声说爱你.jpg',
+                        url    : '/music/song/好想大声说爱你.mp3',
+                        lrc    : '/music/lrc/好想大声说爱你.lrc'
+                    },
+                
+            ]
+        },
+        Meting : {
+            id       : '3778678', 
+            lrcshow  : false, 
+            server   : 'netease', 
+            type     : 'playlist', 
+            fixed    : true, 
+            autoplay : false, 
+            loop     : 'all', 
+            order    : 'random', 
+            preload  : 'auto', 
+            volume   : 0.67, 
+            mutex    : true
+        },
+
+        LazyLoad : {
+            default : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/image/website/lazyload.svg'
+        },
+  
+        Style : {
+            aplayer          : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/APlayer.css',
+            archive          : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/archive.css',
+            donate           : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/donate.css',
+            fancybox         : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/jquery.fancybox.css',
+            footer           : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/footer.css',
+            iconfont         : 'https://at.alicdn.com/t/font_1546312_l3yohatebw.css',
+            index            : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/index.css',
+            menuBubble       : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/menu-bubble.css',
+            page             : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/page.css',
+            post             : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/post.css',
+            search           : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/search.css',
+            tocbot           : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/tocbot.css',
+            normal           : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/normal.css',
+            night            : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/night.css',
+            clipboard        : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/clipboard.css'
+        },
+
+        Script: {
+            aplayer          : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/APlayer.min.js',
+            config           : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/require.config.js',
+            index            : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/index.js',
+            instantSearch    : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/instantsearch.min.js',
+            jQuery           : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/jquery-3.4.1.min.js',
+            loading          : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/loading.js',
+            meting           : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/Meting.min.js',
+            iscroll          : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/iscroll.js',
+            require          : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/require.min.js'
+        },
+
+        Font: {
+            LongCang   : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/LongCang.css',
+            Monda      : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/Monda.css',
+            NotoSansSC : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/NotoSansSC.css',
+            Playball   : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/Playball.css',
+            PTMono     : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/PTMono.css',
+            RobotoSlab : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/RobotoSlab.css',
+            Rosario    : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/Rosario.css',
+            UbuntuMono : 'https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/UbuntuMono.css'
+        },
+
+        Suffix : {
+            about : '生活，即无数个平凡和偶尔的惊喜，惊喜来时，如星坠银河，激起朵朵涟漪.'
+        },
+            
+        Theme : {
+            url  : 'https://github.com/first19326/Hexo-LiveForCode',
+            name : 'Hexo - Live For Code'
+        }  
+    };
+</script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/index.js"></script>
+</body>
+</html>

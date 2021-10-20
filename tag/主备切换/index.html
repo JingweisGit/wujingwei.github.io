@@ -6,7 +6,7 @@
     <meta name="referrer" content="origin">
     <meta http-equiv="Cache-Control" content="no-transform">
     <meta http-equiv="Cache-Control" content="no-siteapp">
-    <title>标签</title>
+    <title>标签 - 主备切换</title>
     <link rel="shortcut icon" href="#"/>
 
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/LongCang.css">
@@ -18,38 +18,81 @@
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/Rosario.css">
     <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/font/UbuntuMono.css">
 
-    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/page.css">
-    
-        <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/normal.css">
-    
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/css/index.css">
 
     <script type="text/javascript" src="https://cdn.jsdelivr.net/gh/first19326/cdn@master/static/js/jquery-3.4.1.min.js"></script>
 <meta name="generator" content="Hexo 5.4.0"></head>
 <body>
     <a id="cover"></a>
     <div id="header">
-    <div class="header">
+    <div class="header" style="height: 39%;" >
         <div class="vertical">
             <div class="inner">
-                <h1 class="header-subtitle">标签</h1>
-                <div class="header-subinfo">
-                    <p class="article-info-text Chinese"></p>
-                    <p class="article-info-text English"></p>                  
-                </div>
+                <h1 class="header-title"></h1>
+                <h2 class="header-description" id="hitokoto"></h2>
+                <h3 class="header-info" id="hitokotoAuthor"></h3>
+                <!--
+                <h1 class="header-subtitle"></h1>
+                <p class="header-subinfo"></p>
+                -->
             </div>
         </div>
-        <canvas id="articleHeaderCanvas"></canvas>
+        <a class="scroll-down" href="javascript:;" target="_self" data-offset="-45">
+            <span class="hidden">Scroll Down</span>
+            <i class="scroll-down-icon iconfont icon-return"></i>
+        </a>
     </div>
 </div>
+  <!--自定义看板娘-->
+  <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+  <script src="/live2d-widget/autoload.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome/css/font-awesome.min.css"/>
+    <!--百度统计-->
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?9788dca461b2a3251ff4bf51e4b9c097";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+    
+
     <div id="container">
     <div id="content">
-        <div class="tags">
-    <div class="tags-title">
-        目前共计 10 个标签
-    </div>
-    <div class="tags-content">
-        <a href="/tag/Camunda/" style="font-size: 18.5px; color: #6f6f6f">Camunda</a> <a href="/tag/Security/" style="font-size: 12px; color: #ccc">Security</a> <a href="/tag/%E4%B8%BB%E4%BB%8E%E5%90%8C%E6%AD%A5/" style="font-size: 12px; color: #ccc">主从同步</a> <a href="/tag/%E4%B8%BB%E5%A4%87%E5%88%87%E6%8D%A2/" style="font-size: 12px; color: #ccc">主备切换</a> <a href="/tag/%E5%AE%B9%E5%99%A8%E6%8A%80%E6%9C%AF/" style="font-size: 25px; color: #111">容器技术</a> <a href="/tag/%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/" style="font-size: 18.5px; color: #6f6f6f">异常处理</a> <a href="/tag/%E6%8B%A6%E6%88%AA%E5%99%A8/" style="font-size: 12px; color: #ccc">拦截器</a> <a href="/tag/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%89%E8%A3%85/" style="font-size: 12px; color: #ccc">数据库安装</a> <a href="/tag/%E7%AD%BE%E5%90%8D/" style="font-size: 12px; color: #ccc">签名</a> <a href="/tag/%E7%B4%A2%E5%BC%95/" style="font-size: 12px; color: #ccc">索引</a>
-    </div>
+        <a style="float: right;margin-top: 15px;" target="_blank" rel="noopener" href='https://gitee.com/jingwei_mayun/spring-series'><img src='https://gitee.com/jingwei_mayun/spring-series/widgets/widget_6.svg' alt='Fork me on Gitee'></img></a>
+        <div class="articles">
+    
+        <div class="article">
+            <div class="article-title">
+                <a href="/2021/10/20/Oracle%20DG%E4%B8%BB%E5%A4%87%E5%88%87%E6%8D%A2/">Oracle DG主备切换</a>
+                
+            </div>
+            <div class="article-abstract">
+                
+                    摘要：Oracle DG主备切换
+                    <a href="/2021/10/20/Oracle%20DG%E4%B8%BB%E5%A4%87%E5%88%87%E6%8D%A2/">阅读全文</a>
+                
+            </div>
+            <div class="clear"></div>
+            <div class="article-info">
+                <span>
+                    <i class="iconfont icon-time"></i> 发表时间：2021-10-20
+                </span>
+                
+                    <span id="/2021/10/20/Oracle DG主备切换/" class="leancloud_visitors" data-flag-title="Oracle DG主备切换">
+                        <i class="iconfont icon-browse"></i> 阅读：<sapn class="leancloud-visitors-count"></span>
+                    </span>
+                
+                <span>
+                    <i class="iconfont icon-interactive"></i> 评论：<span class="valine-comment-count" data-xid="/2021/10/20/Oracle DG主备切换/"></span>
+                </span>
+            </div>
+            <div class="clear"></div>     
+        </div>
+    
+    
 </div>
 
     </div>
