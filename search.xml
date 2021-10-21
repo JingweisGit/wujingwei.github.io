@@ -669,7 +669,7 @@
 <h4 id="2-归档状态检测"><a href="#2-归档状态检测" class="headerlink" title="2) 归档状态检测"></a>2) 归档状态检测</h4><ul>
 <li>检查</li>
 </ul>
-<p>配置DG必须使数主库处于归档状态，具体检测方法为：</p>
+<p>配置DG必须使主库处于归档状态，具体检测方法为：</p>
 <figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sqlplus / as sysdba</span><br></pre></td></tr></table></figure>
 <p>查看归档状态</p>
 <figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">SQL</span><span class="operator">&gt;</span> archive log list</span><br></pre></td></tr></table></figure>
@@ -834,7 +834,7 @@
 
 <figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 1. 校验主库状态</span></span><br><span class="line"><span class="keyword">SELECT</span> SWITCHOVER_STATUS <span class="keyword">FROM</span> V$DATABASE;</span><br><span class="line"><span class="comment">-- 如果主库状态为 TO STANDBY表示可切换，如果不是则检查参数LOG_ARCHIVE_DEST_n配置是否正常。</span></span><br><span class="line"><span class="comment">-- 2. 开始切换</span></span><br><span class="line"><span class="keyword">ALTER</span> DATABASE <span class="keyword">COMMIT</span> <span class="keyword">TO</span> SWITCHOVER <span class="keyword">TO</span> PHYSICAL STANDBY;</span><br><span class="line"><span class="comment">-- 3. 重启主库</span></span><br><span class="line"> SHUTDOWN IMMEDIATE;</span><br><span class="line"> STARTUP MOUNT;</span><br><span class="line"> <span class="comment">--4. 校验是否切换成功,如果成功状态为 TO PRIMARY</span></span><br><span class="line"> <span class="keyword">SELECT</span> SWITCHOVER_STATUS <span class="keyword">FROM</span> V$DATABASE;</span><br></pre></td></tr></table></figure>
 
-<p>如果主库状态时 SESSIONS ACTIVE，则需要切换其状态</p>
+<p>如果主库状态是 SESSIONS ACTIVE，则需要切换其状态</p>
 <figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> DATABASE <span class="keyword">COMMIT</span> <span class="keyword">TO</span> SWITCHOVER <span class="keyword">TO</span> PHYSICAL STANDBY <span class="keyword">WITH</span> SESSION SHUTDOWN;</span><br></pre></td></tr></table></figure>
 
 <h5 id="2）备库切换"><a href="#2）备库切换" class="headerlink" title="2）备库切换"></a>2）备库切换</h5><figure class="highlight sql"><table><tr><td class="code"><pre><span class="line"><span class="comment">-- 1. 校验主库状态</span></span><br><span class="line"><span class="keyword">SELECT</span> SWITCHOVER_STATUS <span class="keyword">FROM</span> V$DATABASE;</span><br><span class="line"><span class="comment">-- 2. 如果备库状态为TO PRIMARY,则可直接切换</span></span><br><span class="line"><span class="keyword">ALTER</span> DATABASE <span class="keyword">COMMIT</span> <span class="keyword">TO</span> SWITCHOVER <span class="keyword">TO</span> <span class="keyword">PRIMARY</span>;</span><br><span class="line"><span class="comment">-- 3. 重启主库</span></span><br><span class="line"> SHUTDOWN IMMEDIATE;</span><br><span class="line"> STARTUP;</span><br><span class="line"> <span class="comment">--4. 校验是否切换成功,如果成功状态为 TO PRIMARY</span></span><br><span class="line"> <span class="keyword">SELECT</span> SWITCHOVER_STATUS <span class="keyword">FROM</span> V$DATABASE;</span><br><span class="line"> <span class="comment">--5. 开启强制日志</span></span><br><span class="line"> <span class="keyword">ALTER</span> <span class="keyword">SYSTEM</span> SWITCH LOGFILE;</span><br></pre></td></tr></table></figure>
@@ -851,7 +851,7 @@
 <p>等待片刻，查证数据是否开始同步，状态都是YES，则表示已经正常</p>
 <figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">SELECT SEQUENCE#, REGISTRAR, FIRST_TIME, NEXT_TIME, APPLIED FROM V$ARCHIVED_LOG ORDER BY SEQUENCE#;</span><br></pre></td></tr></table></figure>
 <h5 id="4）总结"><a href="#4）总结" class="headerlink" title="4）总结"></a>4）总结</h5><blockquote>
-<p>数据库宕机或其他非正常方式停止服务后，如短期内可以恢复，但是切换的时间代价大于恢复的时间代价，不建议做切换，具体情况需要根据实际情况做权衡。</p>
+<p>数据库宕机或其他非正常方式停止服务后，如短期内可以恢复，即切换的时间代价大于恢复的时间代价，不建议做切换，具体需要根据实际情况做权衡。</p>
 </blockquote>
 ]]></content>
       <categories>
