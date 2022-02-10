@@ -861,4 +861,18 @@
         <tag>主备切换</tag>
       </tags>
   </entry>
+  <entry>
+    <title>MySQL覆盖索引</title>
+    <url>/2022/02/10/MySQL%E8%A6%86%E7%9B%96%E7%B4%A2%E5%BC%95/</url>
+    <content><![CDATA[<h4 id="1、概念说明"><a href="#1、概念说明" class="headerlink" title="1、概念说明"></a>1、概念说明</h4><p>​        查询过程中不需要回表操作，从非聚簇索引中即可查询到相关数据，称索引被覆盖，即覆盖索引（参考 <a href="https://blog.jingwee.cn/2021/09/28/MySQL%E7%B4%A2%E5%BC%95%E5%9B%9E%E8%A1%A8/">MySQL索引回表</a>）。</p>
+<h4 id="2、概念理解"><a href="#2、概念理解" class="headerlink" title="2、概念理解"></a>2、概念理解</h4><p>​        对于聚簇索引，其叶子节点包含了行数据，如果使用该索引，即可找到对应的行数据；对于非聚簇索引（即非主键索引），如果索引列为普通索引或者唯一索引，在where条件中使用该索引，但此时待查询数据不在索引列中，那么此时的查询过程为先回表，再查询数据，产生一次回表操作；如果使用多列索引（联合索引），如果where条件中使用了最左索引列，待查询数据同时为联合索引中的一个索引列，那么此时则不需要回表，直接取索引数据即可；</p>
+<h4 id="3、关于覆盖索引的使用场景"><a href="#3、关于覆盖索引的使用场景" class="headerlink" title="3、关于覆盖索引的使用场景"></a>3、关于覆盖索引的使用场景</h4><p>​        覆盖索引并不是在任意场景都适应，需要看匹配的列数据多少是否合适，太多或者太少，其性能提升都不是很大。</p>
+]]></content>
+      <categories>
+        <category>MySQL</category>
+      </categories>
+      <tags>
+        <tag>索引</tag>
+      </tags>
+  </entry>
 </search>
